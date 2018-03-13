@@ -1,0 +1,573 @@
+%!PS-Adobe-3.0 EPSF-3.0
+%%BoundingBox: 55 665 296 796
+%%Title: model
+%%CreationDate: Tue Oct 24 14:17:56 2017
+%%Creator: Tgif-4.2.5-QPL written by William Chia-Wei Cheng (bill.cheng@acm.org)
+%%ProducedBy: (unknown)
+%%Pages: 1
+%%DocumentFonts: (atend)
+%%EndComments
+%%BeginProlog
+
+/tgifdict 56 dict def
+tgifdict begin
+
+/tgifellipsedict 6 dict def
+tgifellipsedict /mtrx matrix put
+
+/TGEL % tgifellipse
+ { tgifellipsedict begin
+      /yrad exch def
+      /xrad exch def
+      /y exch def
+      /x exch def
+      /savematrix mtrx currentmatrix def
+      x y translate
+      xrad yrad scale
+      0 0 1 0 360 arc
+      savematrix setmatrix
+   end
+ } def
+
+/tgifarrowtipdict 8 dict def
+tgifarrowtipdict /mtrx matrix put
+
+/TGAT % tgifarrowtip
+ { tgifarrowtipdict begin
+      /dy exch def
+      /dx exch def
+      /h exch def
+      /w exch def
+      /y exch def
+      /x exch def
+      /savematrix mtrx currentmatrix def
+      x y translate
+      dy dx atan rotate
+      0 0 moveto
+      w neg h lineto
+      w neg h neg lineto
+      savematrix setmatrix
+   end
+ } def
+
+/TGMAX
+ { exch dup 3 1 roll exch dup 3 1 roll gt { pop } { exch pop } ifelse
+ } def
+/TGMIN
+ { exch dup 3 1 roll exch dup 3 1 roll lt { pop } { exch pop } ifelse
+ } def
+/TGSW { stringwidth pop } def
+/tgifstrw 0 def
+
+/bd { bind def } bind def
+
+/GS { gsave } bd
+/GR { grestore } bd
+/NP { newpath } bd
+/CP { closepath } bd
+/CHP { charpath } bd
+/CT { curveto } bd
+/L { lineto } bd
+/RL { rlineto } bd
+/M { moveto } bd
+/RM { rmoveto } bd
+/S { stroke } bd
+/F { fill } bd
+/TR { translate } bd
+/RO { rotate } bd
+/SC { scale } bd
+/MU { mul } bd
+/DI { div } bd
+/DU { dup } bd
+/NE { neg } bd
+/AD { add } bd
+/SU { sub } bd
+/PO { pop } bd
+/EX { exch } bd
+/CO { concat } bd
+/CL { clip } bd
+/EC { eoclip } bd
+/EF { eofill } bd
+/IM { image } bd
+/IMM { imagemask } bd
+/ARY { array } bd
+/SG { setgray } bd
+/RG { setrgbcolor } bd
+/SD { setdash } bd
+/W { setlinewidth } bd
+/SM { setmiterlimit } bd
+/SLC { setlinecap } bd
+/SLJ { setlinejoin } bd
+/SH { show } bd
+/FF { findfont } bd
+/MS { makefont setfont } bd
+/AR { arcto 4 {pop} repeat } bd
+/CURP { currentpoint } bd
+/FLAT { flattenpath strokepath clip newpath } bd
+/TGSM { tgiforigctm setmatrix } def
+/TGRM { savematrix setmatrix } def
+
+end
+
+%%EndProlog
+%%Page: 1 1
+
+%%PageBoundingBox: 55 665 296 796
+tgifdict begin
+/tgifsavedpage save def
+
+1 SM
+1 W
+
+0 SG
+
+72 0 MU 72 11.602 MU TR
+72 128 DI 100.000 MU 100 DI DU NE SC
+
+GS
+
+/tgiforigctm matrix currentmatrix def
+
+% BOX
+0 SG
+GS
+   10 SM
+   GS
+      NP 250 100 M 450 100 L 450 300 L 250 300 L CP
+      S
+   GR
+GR
+
+% TEXT
+NP
+0 SG
+   GS
+      1 W
+      260 90 M
+      GS
+            0 SG
+            /Helvetica FF [20 0 0 -20 0 0] MS
+            (server) SH
+      GR
+   GR
+
+% POLY/OPEN-SPLINE
+0 SG
+GS
+   NP
+      100 150 M
+      0 145 atan DU cos 8.000 MU 245 exch SU
+      exch sin 8.000 MU 150 exch SU L
+   TGSM
+   1 W
+   S
+GR
+GS
+   TGSM
+   NP
+      245 150 8.000 3.000 145 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      245 150 8.000 3.000 145 0 TGAT
+   CP F
+GR
+
+% POLY/OPEN-SPLINE
+0 SG
+GS
+   NP
+      100 250 M
+      0 145 atan DU cos 8.000 MU 245 exch SU
+      exch sin 8.000 MU 250 exch SU L
+   TGSM
+   1 W
+   S
+GR
+GS
+   TGSM
+   NP
+      245 250 8.000 3.000 145 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      245 250 8.000 3.000 145 0 TGAT
+   CP F
+GR
+
+% TEXT
+NP
+0 SG
+   GS
+      1 W
+      110 140 M
+      GS
+            0 SG
+            /Helvetica FF [20 0 0 -20 0 0] MS
+            (VMs arrival) SH
+      GR
+   GR
+
+% TEXT
+NP
+0 SG
+   GS
+      1 W
+      115 240 M
+      GS
+            0 SG
+            /Helvetica FF [20 0 0 -20 0 0] MS
+            (fcts arrival) SH
+      GR
+   GR
+
+% OVAL
+0 SG
+GS
+   GS
+      NP 275 170 10 10 TGEL
+      S
+   GR
+GR
+
+% OVAL
+0 SG
+NP 330 170 10 10 TGEL F
+GS
+   GS
+      NP 330 170 10 10 TGEL
+      S
+   GR
+GR
+
+% POLY/OPEN-SPLINE
+0 SG
+GS
+   NP
+      285 170 M
+      0 35 atan DU cos 8.000 MU exch sin 8.000 MU RM
+      0 35 atan DU cos 8.000 MU 320 exch SU
+      exch sin 8.000 MU 170 exch SU L
+   TGSM
+   1 W
+   S
+GR
+GS
+   TGSM
+   NP
+      285 170 8.000 3.000 -35 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      285 170 8.000 3.000 -35 0 TGAT
+   CP F
+GR
+GS
+   TGSM
+   NP
+      320 170 8.000 3.000 35 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      320 170 8.000 3.000 35 0 TGAT
+   CP F
+GR
+
+% TEXT
+NP
+0 SG
+   GS
+      1 W
+      285 125 M
+      GS
+            0 SG
+            /Helvetica FF [20 0 0 -20 0 0] MS
+            (VMs) SH
+      GR
+   GR
+
+% OVAL
+0 SG
+GS
+   GS
+      NP 275 195 10 10 TGEL
+      S
+   GR
+GR
+
+% OVAL
+0 SG
+NP 332 197 12 12 TGEL F
+GS
+   GS
+      NP 332 197 12 12 TGEL
+      S
+   GR
+GR
+
+% POLY/OPEN-SPLINE
+0 SG
+GS
+   NP
+      285 195 M
+      0 35 atan DU cos 8.000 MU exch sin 8.000 MU RM
+      0 35 atan DU cos 8.000 MU 320 exch SU
+      exch sin 8.000 MU 195 exch SU L
+   TGSM
+   1 W
+   S
+GR
+GS
+   TGSM
+   NP
+      285 195 8.000 3.000 -35 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      285 195 8.000 3.000 -35 0 TGAT
+   CP F
+GR
+GS
+   TGSM
+   NP
+      320 195 8.000 3.000 35 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      320 195 8.000 3.000 35 0 TGAT
+   CP F
+GR
+
+% OVAL
+0 SG
+GS
+   GS
+      NP 275 230 10 10 TGEL
+      S
+   GR
+GR
+
+% OVAL
+0 SG
+NP 337 232 17 17 TGEL F
+GS
+   GS
+      NP 337 232 17 17 TGEL
+      S
+   GR
+GR
+
+% POLY/OPEN-SPLINE
+0 SG
+GS
+   NP
+      285 230 M
+      0 35 atan DU cos 8.000 MU exch sin 8.000 MU RM
+      0 35 atan DU cos 8.000 MU 320 exch SU
+      exch sin 8.000 MU 230 exch SU L
+   TGSM
+   1 W
+   S
+GR
+GS
+   TGSM
+   NP
+      285 230 8.000 3.000 -35 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      285 230 8.000 3.000 -35 0 TGAT
+   CP F
+GR
+GS
+   TGSM
+   NP
+      320 230 8.000 3.000 35 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      320 230 8.000 3.000 35 0 TGAT
+   CP F
+GR
+
+% OVAL
+0 SG
+GS
+   GS
+      NP 275 145 10 10 TGEL
+      S
+   GR
+GR
+
+% OVAL
+0 SG
+NP 330 145 10 10 TGEL F
+GS
+   GS
+      NP 330 145 10 10 TGEL
+      S
+   GR
+GR
+
+% POLY/OPEN-SPLINE
+0 SG
+GS
+   NP
+      285 145 M
+      0 35 atan DU cos 8.000 MU exch sin 8.000 MU RM
+      0 35 atan DU cos 8.000 MU 320 exch SU
+      exch sin 8.000 MU 145 exch SU L
+   TGSM
+   1 W
+   S
+GR
+GS
+   TGSM
+   NP
+      285 145 8.000 3.000 -35 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      285 145 8.000 3.000 -35 0 TGAT
+   CP F
+GR
+GS
+   TGSM
+   NP
+      320 145 8.000 3.000 35 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      320 145 8.000 3.000 35 0 TGAT
+   CP F
+GR
+
+% OVAL
+0 SG
+NP 400 170 10 10 TGEL F
+GS
+   GS
+      NP 400 170 10 10 TGEL
+      S
+   GR
+GR
+
+% OVAL
+0 SG
+NP 397 197 12 12 TGEL F
+GS
+   GS
+      NP 397 197 12 12 TGEL
+      S
+   GR
+GR
+
+% OVAL
+0 SG
+NP 400 145 10 10 TGEL F
+GS
+   GS
+      NP 400 145 10 10 TGEL
+      S
+   GR
+GR
+
+% TEXT
+NP
+0 SG
+   GS
+      1 W
+      380 125 M
+      GS
+            0 SG
+            /Helvetica FF [20 0 0 -20 0 0] MS
+            (fcts) SH
+      GR
+   GR
+
+% OVAL
+0 SG
+NP 397 227 12 12 TGEL F
+GS
+   GS
+      NP 397 227 12 12 TGEL
+      S
+   GR
+GR
+
+% POLY/OPEN-SPLINE
+0 SG
+GS
+   NP
+      450 150 M
+      0 75 atan DU cos 8.000 MU 525 exch SU
+      exch sin 8.000 MU 150 exch SU L
+   TGSM
+   1 W
+   S
+GR
+GS
+   TGSM
+   NP
+      525 150 8.000 3.000 75 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      525 150 8.000 3.000 75 0 TGAT
+   CP F
+GR
+
+% POLY/OPEN-SPLINE
+0 SG
+GS
+   NP
+      450 250 M
+      0 75 atan DU cos 8.000 MU 525 exch SU
+      exch sin 8.000 MU 250 exch SU L
+   TGSM
+   1 W
+   S
+GR
+GS
+   TGSM
+   NP
+      525 250 8.000 3.000 75 0 TGAT
+   1 SG CP F
+   0 SG
+   NP
+      525 250 8.000 3.000 75 0 TGAT
+   CP F
+GR
+
+% OVAL
+0 SG
+NP 397 257 12 12 TGEL F
+GS
+   GS
+      NP 397 257 12 12 TGEL
+      S
+   GR
+GR
+
+% TEXT
+NP
+0 SG
+   GS
+      1 W
+      255 295 M
+      GS
+            0 SG
+            /Helvetica FF [20 0 0 -20 0 0] MS
+            (R resources) SH
+      GR
+   GR
+
+GR
+tgifsavedpage restore
+end
+showpage
+
+%%Trailer
+%MatchingCreationDate: Tue Oct 24 14:17:56 2017
+%%DocumentFonts: Helvetica
+%%EOF
