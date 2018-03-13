@@ -145,10 +145,10 @@ def vary_service_rate_VM():
 	variables_filename = "__i=" + str(i) + "__alpha_m=" + str(PRICE_CONSTANT) + "*alpha_s__i=" + str(i)
 	title = "Varying service rate of VM" + variables
 	filename = '../graphs/vary_service_rate_VM' + variables_filename + '.png'
-	results = results_ub
-	results.extend(results_lb)
-	legends = legends_ub
-	legends.extend(legends_lb)
+	results = results_lb
+	# results.extend(results_ub)
+	legends = legends_lb
+	# legends.extend(legends_ub)
 	create_plot(filename, title, legends, lambdas, results)
 
 def vary_num_VMs():
@@ -206,10 +206,10 @@ def vary_num_VMs():
 	variables_filename = "__gamma=" + str(gamma) + "__alpha_m=" + str(PRICE_CONSTANT) + "*alpha_s__mu_m=" + str(mu_m) + "__mu_s=" + str(mu_s) 
 	title = "Varying number of VMs" + variables
 	filename = '../graphs/vary_num_VMs' + variables_filename + '.png'
-	results = results_ub
-	results.extend(results_lb)
-	legends = legends_ub
-	legends.extend(legends_lb)
+	results = results_lb
+	# results.extend(results_ub)
+	legends = legends_lb
+	# legends.extend(legends_ub)
 	create_plot(filename, title, legends, lambdas, results)
 	# title = "Lambdas for serverless and VMs"
 	# filename = '../graphs/lambdas_split.png'
@@ -276,10 +276,10 @@ def vary_startup_delay():
 	variables_filename = "__i=" + str(i) + "__alpha_m=" + str(PRICE_CONSTANT) + "*alpha_s__mu_m=" + str(mu_m) + "__mu_s=" + str(mu_s) 
 	title = "Varying startup delay" + variables
 	filename = '../graphs/vary_startup_delay' + variables_filename + '.png'
-	results = results_ub
-	results.extend(results_lb)
-	legends = legends_ub
-	legends.extend(legends_lb)
+	results = results_lb
+	# results.extend(results_ub)
+	legends = legends_lb
+	# legends.extend(legends_ub)
 	create_plot(filename, title, legends, lambdas, results)
 
 def main():
