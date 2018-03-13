@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numpy
 import math
 
-markers = ['s', 'h', '^', '*', 'o', 'p', '+', 'x', '<', 'D', '>', 'v']
+markers = ['s', 'h', '^', '*', 'o', 'p', '+', 'x', '<', 'D', '>', 'v', 'd', 0, 5, 2, 7, 1, 4, 3, 6, '1', '2', '3', '4', '8']
 # # Parameters
 # PRICE_CONSTANT = 5
 # beta = 0.8
@@ -27,17 +27,19 @@ markers = ['s', 'h', '^', '*', 'o', 'p', '+', 'x', '<', 'D', '>', 'v']
 # gamma = 5
 
 def solve_quadratic_eq(a,b,c):
-	d = b**2-4*a*c # discriminant
+	d = (b**2)-(4*a*c) # discriminant
+	string = "a: " + str(a) + "\tb: " + str(b) + "\tc: " + str(c) + "\td: " + str(d)
+	print string
 	if d < 0:
 		print "This equation has no real solution"
 		return [] 
 	elif d == 0:
-		x = (-b+math.sqrt(b**2-4*a*c))/2*a
+		x = (-b+math.sqrt(d))/(2*a)
 		print "This equation has one solutions: ", x
 		return [x]
 	else:
-		x1 = (-b+math.sqrt(b**2-4*a*c))/2*a
-		x2 = (-b-math.sqrt(b**2-4*a*c))/2*a
+		x1 = (-b+math.sqrt(d))/(2*a)
+		x2 = (-b-math.sqrt(d))/(2*a)
 		print "This equation has two solutions: ", x1, " and", x2
 		return [x1,x2]
 
@@ -61,7 +63,7 @@ def calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, gamma, i, mode):
 	else:
 		print 'wrong mode'
 		return 'wrong mode'
-	print 'error'
+	# print 'error'
 	return 'error'
 
 def create_plot(filename, title, legends, xaxis, yaxis):
@@ -89,69 +91,125 @@ def create_plot_lambdas(filename, title, legends, xaxis, yaxis, lambda_s):
 def vary_service_rate_VM():
 	PRICE_CONSTANT = 5
 	beta = 0.8
-	lambdas = [10*x for x in range(1,11)]
+	lambdas = [10*x for x in range(1,9)]
 	alpha_m = 1
 	alpha_s = PRICE_CONSTANT * alpha_m
 	mu_s = 5
 	gamma = 0.5
 	i = 5
 	mu_m_multiples = [0.1, 0.5, 1, 1.5, 2]
-	results = []
-	legends = []
+	# UPPER
+	results_ub = []
+	legends_ub = []
 	for m in range(len(mu_m_multiples)):
 		multiple = mu_m_multiples[m]
 		val_mu_m = multiple * mu_s
 		results_lambda_m = []
 		for val_lambda in lambdas:
-			lambda_m = calc_lambda_m(alpha_m, alpha_s, val_mu_m, mu_s, gamma, i)
-			if lambda_m > beta*val_lambda:
-				lambda_m = beta*val_lambda
+			lambda_m = calc_lambda_m(alpha_m, alpha_s, val_mu_m, mu_s, gamma, i, 'upper')
+			if lambda_m == 'error':
+				lambda_m = 0
+			elif lambda_m > val_lambda:
+				lambda_m = val_lambda
+			# if lambda_m > beta*val_lambda:
+			# 	lambda_m = beta*val_lambda
 			# elif lambda_m < 0:
 			# 	lambda_m = 0
 			results_lambda_m.append(lambda_m)
-		key = '$\mu_m=$' + str(multiple) + '$\mu_s$'
-		legends.append(key)
-		results.append(results_lambda_m)
+		key_ub = 'UB$\mu_m=$' + str(multiple) + '$\mu_s$'
+		legends_ub.append(key_ub)
+		results_ub.append(results_lambda_m)
+	# LOWER
+	results_lb = []
+	legends_lb = []
+	for m in range(len(mu_m_multiples)):
+		multiple = mu_m_multiples[m]
+		val_mu_m = multiple * mu_s
+		results_lambda_m = []
+		for val_lambda in lambdas:
+			lambda_m = calc_lambda_m(alpha_m, alpha_s, val_mu_m, mu_s, gamma, i, 'lower')
+			if lambda_m == 'error':
+				lambda_m = 0
+			elif lambda_m > val_lambda:
+				lambda_m = val_lambda
+			# if lambda_m > beta*val_lambda:
+			# 	lambda_m = beta*val_lambda
+			# elif lambda_m < 0:
+			# 	lambda_m = 0
+			results_lambda_m.append(lambda_m)
+		key_lb = 'LB$\mu_m=$' + str(multiple) + '$\mu_s$'
+		legends_lb.append(key_lb)
+		results_lb.append(results_lambda_m)
 	# plot
-	title = "Varying service rate of VM"
-	filename = '../graphs/vary_service_rate_VM.png'
+	variables = ",gamma=" + str(gamma) + ",alpha_m=" + str(PRICE_CONSTANT) + "*alpha_s,i=" + str(i)
+	variables_filename = "__i=" + str(i) + "__alpha_m=" + str(PRICE_CONSTANT) + "*alpha_s__i=" + str(i)
+	title = "Varying service rate of VM" + variables
+	filename = '../graphs/vary_service_rate_VM' + variables_filename + '.png'
+	results = results_ub
+	results.extend(results_lb)
+	legends = legends_ub
+	legends.extend(legends_lb)
 	create_plot(filename, title, legends, lambdas, results)
 
 def vary_num_VMs():
 	PRICE_CONSTANT = 5
 	beta = 0.8
-	lambdas = [10*x for x in range(1,11)]
+	lambdas = [10*x for x in range(1,9)]
 	alpha_m = 1
 	alpha_s = PRICE_CONSTANT * alpha_m
 	mu_s = 5
 	mu_m = 5
-	i = [5*i for i in range(1,11)]
+	i = [5*i for i in range(1,6)]
 	i.insert(0,1)
-	# n = [25]
 	gamma = 0.1
-	results = []
-	legends = []
-	results_lambda_s = []
+	# UPPER
+	results_ub = []
+	legends_ub = []
+	# results_lambda_s = []
 	for val_i in i:
-		print "here"
-		print val_i
 		results_lambda_m = []
-		result_s = []
+		# result_s = []
 		for val_lambda in lambdas:
-			lambda_m = calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, gamma, val_i)
-			if lambda_m > beta*val_lambda:
-				lambda_m = beta*val_lambda
-			# elif lambda_m < 0:
-			# 	lambda_m = 0
+			lambda_m = calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, gamma, val_i, 'upper')
+			if lambda_m == 'error':
+				lambda_m = 0
+			elif lambda_m > val_lambda:
+				lambda_m = val_lambda
 			results_lambda_m.append(lambda_m)
 			# result_s.append(val_lambda - lambda_m)
-		key = 'i=' + str(val_i)
-		legends.append(key)
-		results.append(results_lambda_m)
+		key_ub = 'UB: i=' + str(val_i)
+		legends_ub.append(key_ub)
+		results_ub.append(results_lambda_m)
 		# results_lambda_s.append(result_s)
+	# LOWER
+	results_lb = []
+	legends_lb = []
+	# results_lambda_s = []
+	for val_i in i:
+		results_lambda_m = []
+		# result_s = []
+		for val_lambda in lambdas:
+			lambda_m = calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, gamma, val_i, 'lower')
+			if lambda_m == 'error':
+				lambda_m = 0
+			elif lambda_m > val_lambda:
+				lambda_m = val_lambda
+			results_lambda_m.append(lambda_m)
+			# result_s.append(val_lambda - lambda_m)
+		key_lb = 'LB: i=' + str(val_i)
+		legends_lb.append(key_lb)
+		results_lb.append(results_lambda_m)
+		# results_lambda_s.append(result_s)
+
 	# plot
-	title = "Varying number of VMs"
-	filename = '../graphs/vary_num_VMs.png'
+	variables = ",gamma=" + str(gamma) + ",alpha_m=" + str(PRICE_CONSTANT) + "*alpha_s,mu_m=" + str(mu_m) + ",mu_s=" + str(mu_s)
+	variables_filename = "__gamma=" + str(gamma) + "__alpha_m=" + str(PRICE_CONSTANT) + "*alpha_s__mu_m=" + str(mu_m) + "__mu_s=" + str(mu_s) 
+	title = "Varying number of VMs" + variables
+	filename = '../graphs/vary_num_VMs' + variables_filename + '.png'
+	results = results_ub
+	results.extend(results_lb)
+	legends = legends_ub
+	legends.extend(legends_lb)
 	create_plot(filename, title, legends, lambdas, results)
 	# title = "Lambdas for serverless and VMs"
 	# filename = '../graphs/lambdas_split.png'
@@ -159,33 +217,69 @@ def vary_num_VMs():
 	# create_plot_lambdas(filename, title, legends, lambdas, results, results_lambda_s)
 
 def vary_startup_delay():
-	PRICE_CONSTANT = 5
+	PRICE_CONSTANT = 10
 	beta = 0.8
-	lambdas = [10*x for x in range(1,11)]
+	lambdas = [10*x for x in range(1,9)]
 	alpha_m = 1
 	alpha_s = PRICE_CONSTANT * alpha_m
 	mu_s = 5
 	mu_m = 5
-	i = 50
+	i = 5
 	gamma_multiples = [0.1, 0.5, 1, 1.5, 2]
-	results = []
-	legends = []
+	# Upper bound:
+	results_ub = []
+	legends_ub = []
 	for multiple in gamma_multiples:
 		val_gamma = multiple * mu_m
 		results_lambda_m = []
 		for val_lambda in lambdas:
-			lambda_m = calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, val_gamma, i)
-			if lambda_m > beta*val_lambda:
-				lambda_m = beta*val_lambda
+			lambda_m = calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, val_gamma, i, 'upper')
+			if lambda_m == 'error':
+				lambda_m = 0
+			elif lambda_m > val_lambda:
+				lambda_m = val_lambda
+			# elif lambda_m > i*mu_m:
+			# 	lambda_m = i*mu_m
+			# if lambda_m > beta*val_lambda:s
+			# 	lambda_m = beta*val_lambda
 			# elif lambda_m < 0:
 			# 	lambda_m = 0
 			results_lambda_m.append(lambda_m)
-		key = 'gamma=' + str(multiple) + '$\mu_m$'
-		legends.append(key)
-		results.append(results_lambda_m)
+		key_ub = 'UB: gamma=' + str(multiple) + '$\mu_m$'
+		legends_ub.append(key_ub)
+		results_ub.append(results_lambda_m)
+	# Lower bound
+	results_lb = []
+	legends_lb = []
+	for multiple in gamma_multiples:
+		val_gamma = multiple * mu_m
+		results_lambda_m = []
+		for val_lambda in lambdas:
+			lambda_m = calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, val_gamma, i, 'lower')
+			if lambda_m == 'error':
+				lambda_m = 0
+			elif lambda_m > val_lambda:
+				lambda_m = val_lambda
+			# elif lambda_m > i*mu_m:
+			# 	lambda_m = i*mu_m
+			# if lambda_m > beta*val_lambda:
+			# 	lambda_m = beta*val_lambda
+			# elif lambda_m < 0:
+			# 	lambda_m = 0
+			results_lambda_m.append(lambda_m)
+		key_lb = 'LB: gamma=' + str(multiple) + '$\mu_m$'
+		legends_lb.append(key_lb)
+		results_lb.append(results_lambda_m)
+
 	# plot
-	title = "Varying startup delay"
-	filename = '../graphs/vary_startup_delay.png'
+	variables = ",i=" + str(i) + ",alpha_m=" + str(PRICE_CONSTANT) + "*alpha_s,mu_m=" + str(mu_m) + ",mu_s=" + str(mu_s)
+	variables_filename = "__i=" + str(i) + "__alpha_m=" + str(PRICE_CONSTANT) + "*alpha_s__mu_m=" + str(mu_m) + "__mu_s=" + str(mu_s) 
+	title = "Varying startup delay" + variables
+	filename = '../graphs/vary_startup_delay' + variables_filename + '.png'
+	results = results_ub
+	results.extend(results_lb)
+	legends = legends_ub
+	legends.extend(legends_lb)
 	create_plot(filename, title, legends, lambdas, results)
 
 def main():

@@ -73,7 +73,7 @@ Expected cost per unit time = $\alpha_s E[Q]$ = $\frac{\alpha_s \lambda_s}{\mu_s
 
 Expected cost per time = $\alpha_m$ 
 
-\item \textit{Case 2: single VM ON only to serve jobs} 
+\item \textit{Case 2:\textbf{APPROXIMATE} single VM ON only to serve jobs} 
 
 In this case, the expected cost per unit time consists of cost to serve jobs as well as the cost for setting up the first instance.
 
@@ -91,7 +91,7 @@ Expected cost per unit time = $\frac{\alpha_m \lambda_m}{\mu_m} + \frac{\alpha_m
 = $\frac{\alpha_m \lambda_m}{\mu_m} + \frac{\alpha_m \lambda_m (\mu_m - \lambda_m)}{\mu_m \gamma} $ \\ \\
 = $\alpha_m \lambda_m(\frac{1}{\mu_m} + \frac{\mu_m - \lambda_m}{\mu_m \gamma}) $
 
-\item \textit{Case 3: Multiple VMs ON only to serve jobs} 
+\item \textit{Case 3: \textbf{APPROXIMATE} Multiple VMs ON only to serve jobs} 
 
 This case increases the number of VMs that are utilized as opposed to a single VM in case 2. Assume that $i$ is the number of VMs, each of which can be turned ON and OFF. The arrival rate of jobs for each VM is equal, where the rate is $\frac{\lambda_m}{i}$.
 
@@ -104,6 +104,51 @@ From case 2, cost for first instance for a single VM for arrival rate $\lambda_m
 For an arrival rate $\frac{\lambda_m}{i}$, cost for first instance of a single VM = $\frac{\alpha_m \lambda_m}{i} (\frac{1}{\mu_m} + \frac{\mu_m - \frac{\lambda_m}{i}}{\mu_m \gamma})$ \\ \\
  = $\frac{\alpha_m \lambda_m}{i} (\frac{1}{\mu_m} + \frac{\mu_m i - \lambda_m}{\mu_m \gamma i})$
 
+\item \textit{Case 4: \textbf{EXACT} Multiple VMs ON only to serve jobs} \\
+Assume that $i$ is the number of VMs, each of which can be turned ON and OFF. The arrival rate of jobs for each VM is equal, where the rate is $\frac{\lambda_m}{i}$.
+
+Cost to serve job for each VM  = = $\frac{\alpha_m \lambda_m}{\mu_m i}$
+
+Cost for starting an instance = $\frac{1}{E[busy] + E[idle] + E[startup]}(\frac{1}{\gamma})\alpha_m$ 
+
+where E[busy] = $\frac{1}{\mu_m - (\frac{\lambda_m}{i})}$, E[idle] = $\frac{1}{\lambda_m}$ and E[startup] = $\frac{1}{\gamma}$
+
+We simplify the cost for starting an instance as follows: 
+\begin{itemize}
+\item Upper bound cost = $\frac{1}{E[busy] + E[startup]}(\frac{1}{\gamma})\alpha_m$ = $i(\frac{\alpha_m \lambda_m}{\mu_m i} + \frac{\alpha_m \mu_m i - \alpha_m \lambda_m}{\gamma i + \mu_m i - \lambda_m})$ = $\frac{\alpha_m \lambda_m}{\mu_m} + \frac{\alpha_m \mu_m i^2 - \alpha_m \lambda_m i}{\gamma i + \mu_m i - \lambda_m}$
+\item Lower bound cost = $\frac{1}{2 * E[busy] + E[startup]}(\frac{1}{\gamma})\alpha_m$ = $i(\frac{\alpha_m \lambda_m}{\mu_m i} + \frac{\alpha_m \mu_m i - \alpha_m \lambda_m}{2 \gamma i + \mu_m i - \lambda_m})$ = $\frac{\alpha_m \lambda_m}{\mu_m} + \frac{\alpha_m \mu_m i^2 - \alpha_m \lambda_m i}{2 \gamma i + \mu_m i - \lambda_m}$
+\end{itemize}
+
+\textbf{Results}
+
+Note: For all the graphs, I could not compute upper bound, as the quadratic equation had no real roots.
+
+
+\textit{Varying Startup Delay - Figure 2}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.2\textwidth]{graphs/varystartupdelay.png}
+    \caption{Varying Startup Delay}
+    \label{fig:varystartupdelay}
+\end{figure}
+
+\textit{Varying number of VMs  - Figure 3}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.2\textwidth]{graphs/varynumVMs.png}
+    \caption{Varying number of VMs}
+    \label{fig:varynumVMs}
+\end{figure}
+
+\textit{Varying service rate  - Figure 4}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.2\textwidth]{graphs/varyservicerate.png}
+    \caption{Varying service rate of VMs}
+    \label{fig:varyservicerate}
+\end{figure}
 
 \end{itemize}
 
@@ -114,7 +159,7 @@ For an arrival rate $\frac{\lambda_m}{i}$, cost for first instance of a single V
 \textbf{Decision variables: $\lambda_m^{*}, \lambda_s^{*}$} \\
 
 \begin{itemize}
-\item \textbf{Single VM}
+\item \textbf{Single VM, case 2 in previous subsection}
 
 The total cost is the sum of the cost of serverless and spot instances. \\ \\
 Total cost = $\frac{\alpha_s \lambda_s}{\mu_s}$ + $\alpha_m \lambda_m(\frac{1}{\mu_m} + \frac{\mu_m - \lambda_m}{\mu_m \gamma}) $
@@ -130,7 +175,7 @@ Constraint: utilization should be less than 1 $\rightarrow$ $\lambda_m < \mu_m$
 
 $\lambda_s^{*} = \lambda - \lambda_m^{*} = \lambda + \frac{\gamma \mu_m \alpha_s}{2 \mu_s \alpha_m} - \frac{\gamma + \mu_m}{2}$
 
-\item \textbf{Multiple VMs}
+\item \textbf{Multiple VMs (Approximate, case 3 in previous subsection}
 
 The total cost is the sum of the cost of serverless and spot instances. \\ \\
 Total cost = $\frac{\alpha_s \lambda_s}{\mu_s}$ + $\frac{\alpha_m \lambda_m}{i} (\frac{1}{\mu_m} + \frac{\mu_m i - \lambda_m}{\mu_m \gamma i})$
@@ -147,7 +192,43 @@ We add an additional constraint: $\lambda_m < \beta \lambda$, where $\beta = 0.8
 
 $\lambda_s^{*} = \lambda - \lambda_m^{*} = \lambda + \frac{\gamma \mu_m \alpha_s i^2}{2 \mu_s \alpha_m} - \frac{(\gamma + \mu_m)i}{2}$
 
+\item \textbf{Multiple VMs (EXACT, case 4 in previous subsection}
+
+\begin{itemize}
+\item Total cost for Upper bound = $\frac{\alpha_s \lambda_s}{\mu_s} + \frac{\alpha_m \lambda_m}{\mu_m} + \frac{\alpha_m \mu_m i^2 - \alpha_m \lambda_m i}{\gamma i + \mu_m i - \lambda_m}$
+\item Total cost for Lower bound = $\frac{\alpha_s \lambda_s}{\mu_s} + \frac{\alpha_m \lambda_m}{\mu_m} + \frac{\alpha_m \mu_m i^2 - \alpha_m \lambda_m i}{2 \gamma i + \mu_m i - \lambda_m}$
 \end{itemize}
+
+\end{itemize}
+
+\section{Consulting model}
+
+A VM can be thought of as an employee - costs less but you have to pay them all the time. Serverless is like a consultant, expensive but only pay for the hours worked.
+
+For systems with dynamic workloads, we can think of threshold policies with the response time as the constraint (which works out a constraint on utilization). Suppose your system is running at capacity with N VMs. Now if a little extra load comes in, it is cheaper to send it to serverless, until the excess load becomes enough so that N+1 VMs are more cost effective. The same thing applies in the reverse direction - if the load reduces, it becomes cost effective to shut down a VM and send the excess load to serverless, until the load reduces enough to rebalance amongst the N-1 servers and maintain the utilization.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{consulting_model}
+    \caption{Serverless is like Consulting}
+    \label{fig:model}
+\end{figure}
+
+\subsection{When to instantiate a new VM} 
+
+Assume that the workload ($\lambda$) is executed on $N$ machines. Extra workload ($\epsilon$) comes in. We need to calculate the value of the extra workload ($\epsilon$) for which it is cheaper to instantiate a new VM, such that all jobs are executed on the VM. \\ \\ 
+For a time interval T, 
+
+Cost for VM (always ON)  = $\alpha_m T$ \\
+
+Cost for serverless in T = $\alpha_s$ * number of jobs arrived in T * response time per job = $\alpha_s (\epsilon T) (\frac{1}{\mu_s})$ 
+
+To calculate the value of extra workload ($\epsilon$), cost for VM = cost for serverless
+
+$\alpha_m T = \alpha_s (\epsilon T) (\frac{1}{\mu_s})$ 
+
+$\epsilon =  \frac{\alpha_m}{\alpha_s} \mu_s$ \\ \\
+If the extra workload $> \epsilon$, we instantiate a new VM.
 
 \end{document}
 
