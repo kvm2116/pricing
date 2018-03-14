@@ -70,7 +70,8 @@ def create_plot(filename, title, legends, xaxis, yaxis):
 	fig = plt.figure()
 	for j in range(len(yaxis)):
 		plt.plot(xaxis, yaxis[j], marker=markers[j])
-	plt.legend(legends, loc='upper left')
+	if len(legends) != 0:
+		plt.legend(legends, loc='upper left')
 	fig.suptitle(title)
 	plt.xlabel(r'$\lambda$')
 	plt.ylabel(r'$\lambda_m$')
@@ -282,10 +283,44 @@ def vary_startup_delay():
 	# legends.extend(legends_ub)
 	create_plot(filename, title, legends, lambdas, results)
 
+def plotVMcost():
+	lambdas = [x for x in range(1,101)]
+	alpha_m = 1
+	gamma = 1
+	i = 5
+	mu_m = 5
+	results = []
+	results_ub = []
+	results_lb = []
+	for val_lambda in lambdas:
+		results_ub.append(calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'upper'))
+		results_lb.append(calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'lower'))
+	results.append(results_ub)
+	results.append(results_lb)
+	legends = ['upper bound', 'lower bound']
+	title = "VM cost"
+	filename = '../graphs/VMcost' + '.png'
+	create_plot(filename, title, legends, lambdas, results)
+
+# mode : 'upper'/'lower'
+def calcVMcost(alpha_m, mu_m, gamma, i, lambda_m, mode):
+	serve_jobs_cost = (alpha_m * lambda_m)/mu_m
+	ub_num = (alpha_m * mu_m * (i**2)) - (lambda_m * alpha_m * i)
+	ub_den = (gamma * i) + (mu_m * i) - (lambda_m)
+	lb_num = ub_num
+	lb_den = (2 * gamma * i) + (mu_m * i) - (lambda_m)
+	if mode == 'upper':
+		return ub_num/ub_den
+	elif mode == 'lower':
+		return lb_num/lb_den
+	else:
+		print 'wrong mode to calcVMcost'
+	return 'wrong mode to calcVMcost'
+
 def main():
 	if len(sys.argv) != 2:
 		print "USAGE: python generate_plots.py <exp_type>"
-		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM"
+		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost"
 		return
 	exp_type = sys.argv[1]
 	if exp_type == 'vary_startup_delay':
@@ -294,9 +329,11 @@ def main():
 		vary_num_VMs()
 	elif exp_type == 'vary_service_rate_VM':
 		vary_service_rate_VM()
+	elif exp_type == 'plotVMcost':
+		plotVMcost()
 	else:
 		print "Wrong <exp_type>"
-		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM"
+		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost"
 
 if __name__ == '__main__':
 	main()
