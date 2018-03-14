@@ -68,13 +68,16 @@ def calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, gamma, i, mode):
 
 def create_plot(filename, title, legends, xaxis, yaxis):
 	fig = plt.figure()
-	for j in range(len(yaxis)):
-		plt.plot(xaxis, yaxis[j], marker=markers[j])
+	# for j in range(len(yaxis)):
+	# 	plt.plot(xaxis, yaxis[j], marker=markers[j])
+	plt.plot(xaxis, yaxis[0], 'ro')
+	plt.plot(xaxis, yaxis[1], 'bo')
+	plt.ylabel('Total VM Cost')
 	if len(legends) != 0:
 		plt.legend(legends, loc='upper left')
 	fig.suptitle(title)
 	plt.xlabel(r'$\lambda$')
-	plt.ylabel(r'$\lambda_m$')
+	# plt.ylabel(r'$\lambda_m$')
 	plt.savefig(filename)
 
 def create_plot_lambdas(filename, title, legends, xaxis, yaxis, lambda_s):
@@ -292,23 +295,40 @@ def plotVMcost():
 	results = []
 	results_ub = []
 	results_lb = []
+	xaxis = []
+	count_ub, count_lb = 0,0
 	for val_lambda in lambdas:
-		results_ub.append(calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'upper'))
-		results_lb.append(calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'lower'))
+		val_ub = calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'upper')
+		val_lb = calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'lower')
+		if val_ub != 'div0' and val_lb != 'div0':
+			results_ub.append(val_ub)	
+			results_lb.append(val_lb)
+			xaxis.append(val_lambda)
+		if val_ub == 'div0':
+			count_ub +=1
+		if val_lb == 'div0':
+			count_lb +=1	 
+	print "count_ub = %d" % (count_ub)
+	print "count_lb = %d" % (count_lb)	
 	results.append(results_ub)
 	results.append(results_lb)
 	legends = ['upper bound', 'lower bound']
-	title = "VM cost"
-	filename = '../graphs/VMcost' + '.png'
-	create_plot(filename, title, legends, lambdas, results)
+	variables = ",i=" + str(i) + ",alpha_m=" + str(alpha_m) + ",mu_m=" + str(mu_m) + ",gamma=" + str(gamma)
+	title = "VM cost" + variables
+	filename = '../graphs/VMcost' + variables + '.png'
+	create_plot(filename, title, legends, xaxis, results)
 
 # mode : 'upper'/'lower'
 def calcVMcost(alpha_m, mu_m, gamma, i, lambda_m, mode):
 	serve_jobs_cost = (alpha_m * lambda_m)/mu_m
 	ub_num = (alpha_m * mu_m * (i**2)) - (lambda_m * alpha_m * i)
 	ub_den = (gamma * i) + (mu_m * i) - (lambda_m)
+	if ub_den == 0:
+		return 'div0'
 	lb_num = ub_num
 	lb_den = (2 * gamma * i) + (mu_m * i) - (lambda_m)
+	if lb_den == 0:
+		return 'div0'
 	if mode == 'upper':
 		return ub_num/ub_den
 	elif mode == 'lower':
