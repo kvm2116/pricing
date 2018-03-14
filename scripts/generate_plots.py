@@ -290,7 +290,7 @@ def plotVMcost():
 	lambdas = [x for x in range(1,101)]
 	alpha_m = 1
 	gamma = 1
-	i = 5
+	i = 5.0
 	mu_m = 5
 	results = []
 	results_ub = []
@@ -300,6 +300,8 @@ def plotVMcost():
 	for val_lambda in lambdas:
 		val_ub = calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'upper')
 		val_lb = calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'lower')
+		# val_lb = (alpha_m/gamma)*(1/((1/mu_m) + (i/val_lambda) + (1/gamma)))
+		# print val_lb
 		if val_ub != 'div0' and val_lb != 'div0':
 			results_ub.append(val_ub)	
 			results_lb.append(val_lb)
