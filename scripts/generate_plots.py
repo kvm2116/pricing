@@ -51,7 +51,7 @@ def calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, gamma, i, mode):
 	c_ub = (alpha_m * mu_m * mu_s * gamma * (i**2)) + (alpha_m * mu_s * (gamma**2) * (i**2)) + (alpha_m * (mu_m**2) * mu_s * (i**2)) - (2 * alpha_s * (mu_m**2) * gamma * (i**2)) - (alpha_s * mu_m * (gamma**2) * (i**2)) - (alpha_s * (mu_m**3) * (i**2))
 	a_lb = a_ub
 	b_lb = (2 * alpha_s * (mu_m**2) * i) + (4 * alpha_s * mu_m * gamma * i) - (2 * alpha_m * mu_m * mu_s * i) - (4 * alpha_m * mu_s * gamma * i)
-	c_lb = (4 * alpha_m * mu_s * (gamma**2) * (i**2)) + (alpha_m * (mu_m**2) * mu_s * (i**2)) - (4 * alpha_s * mu_m * (gamma**2) * (i**2)) - (alpha_s * (mu_m**3) * (i**2)) - (2 * alpha_s * (mu_m**2) * gamma * (i**2))
+	c_lb = (4 * alpha_m * mu_s * (gamma**2) * (i**2)) + (alpha_m * (mu_m**2) * mu_s * (i**2)) - (4 * alpha_s * mu_m * (gamma**2) * (i**2)) - (alpha_s * (mu_m**3) * (i**2)) - (4 * alpha_s * (mu_m**2) * gamma * (i**2)) + (2 * alpha_m * mu_m * mu_s * gamma * (i**2))
 	if mode == 'upper':
 		roots = solve_quadratic_eq(a_ub, b_ub, c_ub)
 		if len(roots) != 0:
@@ -68,16 +68,13 @@ def calc_lambda_m(alpha_m, alpha_s, mu_m, mu_s, gamma, i, mode):
 
 def create_plot(filename, title, legends, xaxis, yaxis):
 	fig = plt.figure()
-	# for j in range(len(yaxis)):
-	# 	plt.plot(xaxis, yaxis[j], marker=markers[j])
-	plt.plot(xaxis, yaxis[0], 'ro')
-	plt.plot(xaxis, yaxis[1], 'bo')
-	plt.ylabel('Total VM Cost')
+	for j in range(len(yaxis)):
+		plt.plot(xaxis, yaxis[j], marker=markers[j])
 	if len(legends) != 0:
 		plt.legend(legends, loc='upper left')
 	fig.suptitle(title)
 	plt.xlabel(r'$\lambda$')
-	# plt.ylabel(r'$\lambda_m$')
+	plt.ylabel(r'$\lambda_m$')
 	plt.savefig(filename)
 
 def create_plot_lambdas(filename, title, legends, xaxis, yaxis, lambda_s):
@@ -286,12 +283,72 @@ def vary_startup_delay():
 	# legends.extend(legends_ub)
 	create_plot(filename, title, legends, lambdas, results)
 
-def plotVMcost():
-	lambdas = [x for x in range(1,101)]
-	alpha_m = 1
-	gamma = 1
+def plotTotalcost():
+	
+	val_lambda = 200
+	lambdas_m = [x for x in range(1,val_lambda+1)]
+	alpha_m = 1.0
+	PRICE_CONSTANT = 5
+	alpha_s = PRICE_CONSTANT * alpha_m
+	gamma = 10.0
 	i = 5.0
-	mu_m = 5
+	mu_m = 5.0
+	mu_s = 5.0
+	results = []
+	results_ub = []
+	results_lb = []
+	legends_ub = []
+	xaxis = []
+	count_ub, count_lb = 0,0
+
+	for val_lambda_m in lambdas_m:
+		val_ub = calcTotalcost(alpha_s, alpha_m, mu_s, mu_m, gamma, i, val_lambda, val_lambda_m,'upper')
+		val_lb = calcTotalcost(alpha_s, alpha_m, mu_s, mu_m, gamma, i, val_lambda, val_lambda_m,'lower')
+		# val_lb = (alpha_m/gamma)*(1/((1/mu_m) + (i/val_lambda) + (1/gamma)))
+		# print val_lb
+		if val_ub != 'div0' and val_lb != 'div0':
+			results_ub.append(val_ub)	
+			# results_lb.append(val_lb)
+			xaxis.append(val_lambda_m)
+	results.append(results_ub)
+	# results.append(results_lb)
+	
+	variables = ",i=" + str(i) + ",alpha_m=" + str(alpha_m) + ",mu_m=" + str(mu_m) + ",gamma=" + str(gamma) + ",lambda=" + str(val_lambda)
+	title = "VM cost" + variables
+	filename = '../graphs/Totalcost' + variables + '.png'
+	fig = plt.figure()
+	plt.plot(xaxis, results[0], 'ro')
+	plt.ylabel('Total Cost')
+	fig.suptitle(title)
+	plt.xlabel(r'$\lambda_m$')
+	plt.savefig(filename)
+
+# mode : 'upper'/'lower'
+def calcTotalcost(alpha_s, alpha_m, mu_s, mu_m, gamma, i, val_lambda, val_lambda_m, mode):
+	serverless_cost = (alpha_s * (val_lambda - val_lambda_m))/mu_s
+	serve_jobs_cost = (alpha_m * val_lambda_m)/mu_m
+	ub_num = (alpha_m * mu_m * (i**2)) - (val_lambda_m * alpha_m * i)
+	ub_den = (gamma * i) + (mu_m * i) - (val_lambda_m)
+	lb_num = ub_num
+	lb_den = (2 * gamma * i) + (mu_m * i) - (val_lambda_m)
+	if mode == 'upper':
+		if ub_den == 0:
+			return 'div0'
+		return serverless_cost + serve_jobs_cost + (ub_num/ub_den)
+	elif mode == 'lower':
+		if lb_den == 0:
+			return 'div0'
+		return serverless_cost + serve_jobs_cost + (lb_num/lb_den)
+	else:
+		print 'wrong mode to calcVMcost'
+	return 'wrong mode to calcVMcost'
+
+def plotVMcost():
+	lambdas = [x for x in range(1,301)]
+	alpha_m = 1.0
+	gamma = 1.0
+	i = 5.0
+	mu_m = 5.0
 	results = []
 	results_ub = []
 	results_lb = []
@@ -318,23 +375,31 @@ def plotVMcost():
 	variables = ",i=" + str(i) + ",alpha_m=" + str(alpha_m) + ",mu_m=" + str(mu_m) + ",gamma=" + str(gamma)
 	title = "VM cost" + variables
 	filename = '../graphs/VMcost' + variables + '.png'
-	create_plot(filename, title, legends, xaxis, results)
+	fig = plt.figure()
+	plt.plot(xaxis, yaxis[0], 'ro')
+	plt.plot(xaxis, yaxis[1], 'bo')
+	plt.ylabel('Total VM Cost')
+	if len(legends) != 0:
+		plt.legend(legends, loc='upper left')
+	fig.suptitle(title)
+	plt.xlabel(r'$\lambda$')
+	plt.savefig(filename)
 
 # mode : 'upper'/'lower'
 def calcVMcost(alpha_m, mu_m, gamma, i, lambda_m, mode):
 	serve_jobs_cost = (alpha_m * lambda_m)/mu_m
 	ub_num = (alpha_m * mu_m * (i**2)) - (lambda_m * alpha_m * i)
 	ub_den = (gamma * i) + (mu_m * i) - (lambda_m)
-	if ub_den == 0:
-		return 'div0'
 	lb_num = ub_num
 	lb_den = (2 * gamma * i) + (mu_m * i) - (lambda_m)
-	if lb_den == 0:
-		return 'div0'
 	if mode == 'upper':
-		return ub_num/ub_den
+		if ub_den == 0:
+			return 'div0'
+		return serve_jobs_cost + (ub_num/ub_den)
 	elif mode == 'lower':
-		return lb_num/lb_den
+		if lb_den == 0:
+			return 'div0'
+		return serve_jobs_cost + (lb_num/lb_den)
 	else:
 		print 'wrong mode to calcVMcost'
 	return 'wrong mode to calcVMcost'
@@ -342,7 +407,7 @@ def calcVMcost(alpha_m, mu_m, gamma, i, lambda_m, mode):
 def main():
 	if len(sys.argv) != 2:
 		print "USAGE: python generate_plots.py <exp_type>"
-		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost"
+		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"
 		return
 	exp_type = sys.argv[1]
 	if exp_type == 'vary_startup_delay':
@@ -353,9 +418,11 @@ def main():
 		vary_service_rate_VM()
 	elif exp_type == 'plotVMcost':
 		plotVMcost()
+	elif exp_type == 'plotTotalcost':
+		plotTotalcost()
 	else:
 		print "Wrong <exp_type>"
-		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost"
+		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"
 
 if __name__ == '__main__':
 	main()
