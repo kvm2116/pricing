@@ -1,19 +1,19 @@
 #!/usr/bin/python
 """
 Finds the number of blocks common between two files in ipfs
-python ipfs_file_similarity.py '/Users/Kunal/Downloads/checkpoints/images' similarity_matrix.csv
+python ipfs_file_similarity.py '/Users/Kunal/Downloads/checkpoints/images' similarity_matrix.csv 262144
 """
 
 import os, sys
 import subprocess
 import numpy as np
 
-def add_file_ipfs(path):
+def add_file_ipfs(path, chunker_size):
 	files_ipfs_path = {}
 	for dirs in os.walk(path).next()[1]:
 		fullpath = path + '/' + dirs
 		print fullpath
-		command = 'ipfs add -rq ' + fullpath + ' | tail -n 1'
+		command = 'ipfs add --chunker=size-' + chunker_size + ' -rq ' + fullpath + ' | tail -n 1'
 		p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
 		ipfs_name, _ = p.communicate()
 		files_ipfs_path[dirs] = ipfs_name.strip('\n')
@@ -60,12 +60,13 @@ def save_similarity_matrix(similarity_matrix, file_names, output_file):
 	np.savetxt(output_file, np_matrix, delimiter=",", header=header)
 
 def main():
-	if len(sys.argv) != 3:
-		print "USAGE: python ipfs_file_similarity.py <directory> <output.csv>"
+	if len(sys.argv) != 4:
+		print "USAGE: python ipfs_file_similarity.py <directory> <output.csv> <chunker size>"
 		return
 	path = sys.argv[1]
 	output_file = sys.argv[2]
-	files_ipfs_path = add_file_ipfs(path)
+	chunker_size = sys.argv[3]
+	files_ipfs_path = add_file_ipfs(path, chunker_size)
 	# files_ipfs_path = {'images9': 'QmNxKCn4M8wA9noejhcurCQRkxMpkNpx8tfzoFVBt9Vxoy', 'images8': 'QmQnDdwmBYxta3gg54RiBewM8zFDKdpRcjkVsBoxTByHjn', 'images5': 'QmSdqFoKdAvj14K2woDSfPUMMmMcPi8xurczEeT1bLzUmB', 'images4': 'QmPLfTGEQb2XURbDt74EJCdrXopgN7qJYNFjZepUTztpNX', 'images7': 'QmNbDKjL2VfwX5bvCtoCs2Zb74KK26RfVUzqc65Z9SqeDK', 'images6': 'QmfZALohrBzyPQyRufdgFafndNBghW1c1PsrjFwrNJyUaa', 'images1': 'QmTAFJvt6Pk9nR1grQwu7f4vQh3BbhpLhXRebBpdqu1WwV', 'images3': 'QmXv3tQkASPx2C7FJ8jTrERgN7Dv79Rh8mkG4GasprE4bQ', 'images2': 'QmTuQftXTgb73X5yfiGLtP2twK1tp28e4fd9PHDboBzPYB', 'images11': 'QmUpeJVdAszZtbjuqt2X6d3tpvmWnCm2bvvDcQpWiUFLit', 'images10': 'QmWko1TvUBBJwZSWFuy3Y9ChzVBSoaboS6nsfPPVEZTiJw', 'images13': 'QmcARfzSLX6cGinMZ7t3qBZuspjggTL2qj8RBxDX2crEh9', 'images12': 'QmQdNPt1rNLq86vKkNQ34gPcUHBW3W3Ej7eZeDVP4YW6TN', 'images15': 'QmRMRoDo6jwffzSTUQ4fGdykhhtRrm8xkaA2DygxXYR1Fv', 'images14': 'QmT7hgr7ucXcTGzxvgAjbcKTMffNaJHF3om4einvsAYCvd', 'images16': 'QmZMUFo238MGpj7bRbQCSSb8UkCsjXQE95b1VDmLkDCvv3'}
 	files_hashes = get_file_hashes(files_ipfs_path)
 	file_names = ['images' + str(i) for i in range(1,17)]

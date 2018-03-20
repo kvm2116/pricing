@@ -284,13 +284,12 @@ def vary_startup_delay():
 	create_plot(filename, title, legends, lambdas, results)
 
 def plotTotalcost():
-	
-	val_lambda = 200
+	val_lambda = 100
 	lambdas_m = [x for x in range(1,val_lambda+1)]
 	alpha_m = 1.0
 	PRICE_CONSTANT = 5
 	alpha_s = PRICE_CONSTANT * alpha_m
-	gamma = 10.0
+	gamma = 2.0
 	i = 5.0
 	mu_m = 5.0
 	mu_s = 5.0
@@ -299,6 +298,8 @@ def plotTotalcost():
 	results_lb = []
 	legends_ub = []
 	xaxis = []
+	xaxis_ub = []
+	xaxis_lb = []
 	count_ub, count_lb = 0,0
 
 	for val_lambda_m in lambdas_m:
@@ -306,18 +307,25 @@ def plotTotalcost():
 		val_lb = calcTotalcost(alpha_s, alpha_m, mu_s, mu_m, gamma, i, val_lambda, val_lambda_m,'lower')
 		# val_lb = (alpha_m/gamma)*(1/((1/mu_m) + (i/val_lambda) + (1/gamma)))
 		# print val_lb
-		if val_ub != 'div0' and val_lb != 'div0':
+		if val_ub != 'div0':
 			results_ub.append(val_ub)	
-			# results_lb.append(val_lb)
-			xaxis.append(val_lambda_m)
+			xaxis_ub.append(val_lambda_m)
+		if val_lb != 'div0':
+			results_lb.append(val_lb)
+			xaxis_lb.append(val_lambda_m)
 	results.append(results_ub)
-	# results.append(results_lb)
-	
-	variables = ",i=" + str(i) + ",alpha_m=" + str(alpha_m) + ",mu_m=" + str(mu_m) + ",gamma=" + str(gamma) + ",lambda=" + str(val_lambda)
-	title = "VM cost" + variables
+	results.append(results_lb)
+	xaxis.append(xaxis_ub)
+	xaxis.append(xaxis_lb)
+	variables = ",new_LB,i=" + str(i) + ",alpha_m=" + str(alpha_m) + ",mu_m=" + str(mu_m) + ",gamma=" + str(gamma) + ",lambda=" + str(val_lambda)
+	title = "Total cost" + variables
 	filename = '../graphs/Totalcost' + variables + '.png'
 	fig = plt.figure()
-	plt.plot(xaxis, results[0], 'ro')
+	plt.plot(xaxis[0], results[0], 'ro')
+	plt.plot(xaxis[1], results[1], 'bo')
+	legends = ['upper bound', 'lower bound']
+	plt.legend(legends, loc='upper left')
+
 	plt.ylabel('Total Cost')
 	fig.suptitle(title)
 	plt.xlabel(r'$\lambda_m$')
@@ -331,14 +339,16 @@ def calcTotalcost(alpha_s, alpha_m, mu_s, mu_m, gamma, i, val_lambda, val_lambda
 	ub_den = (gamma * i) + (mu_m * i) - (val_lambda_m)
 	lb_num = ub_num
 	lb_den = (2 * gamma * i) + (mu_m * i) - (val_lambda_m)
+	val_lb = (alpha_m/gamma)*(1/((1/mu_m) + (i/val_lambda) + (1/gamma)))*i
 	if mode == 'upper':
 		if ub_den == 0:
 			return 'div0'
 		return serverless_cost + serve_jobs_cost + (ub_num/ub_den)
 	elif mode == 'lower':
-		if lb_den == 0:
-			return 'div0'
-		return serverless_cost + serve_jobs_cost + (lb_num/lb_den)
+		# if lb_den == 0:
+		# 	return 'div0'
+		# return serverless_cost + serve_jobs_cost + (lb_num/lb_den) # OLD Lower Bound
+		return serverless_cost + serve_jobs_cost + val_lb # NEW Lower Bound
 	else:
 		print 'wrong mode to calcVMcost'
 	return 'wrong mode to calcVMcost'
@@ -346,38 +356,36 @@ def calcTotalcost(alpha_s, alpha_m, mu_s, mu_m, gamma, i, val_lambda, val_lambda
 def plotVMcost():
 	lambdas = [x for x in range(1,301)]
 	alpha_m = 1.0
-	gamma = 1.0
+	gamma = 2.0
 	i = 5.0
 	mu_m = 5.0
 	results = []
 	results_ub = []
 	results_lb = []
 	xaxis = []
-	count_ub, count_lb = 0,0
+	xaxis_ub = []
+	xaxis_lb = []
 	for val_lambda in lambdas:
 		val_ub = calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'upper')
 		val_lb = calcVMcost(alpha_m, mu_m, gamma, i, val_lambda, 'lower')
-		# val_lb = (alpha_m/gamma)*(1/((1/mu_m) + (i/val_lambda) + (1/gamma)))
 		# print val_lb
-		if val_ub != 'div0' and val_lb != 'div0':
+		if val_ub != 'div0':
 			results_ub.append(val_ub)	
+			xaxis_ub.append(val_lambda)
+		if val_lb != 'div0':
 			results_lb.append(val_lb)
-			xaxis.append(val_lambda)
-		if val_ub == 'div0':
-			count_ub +=1
-		if val_lb == 'div0':
-			count_lb +=1	 
-	print "count_ub = %d" % (count_ub)
-	print "count_lb = %d" % (count_lb)	
+			xaxis_lb.append(val_lambda)
 	results.append(results_ub)
 	results.append(results_lb)
+	xaxis.append(xaxis_ub)
+	xaxis.append(xaxis_lb)
 	legends = ['upper bound', 'lower bound']
-	variables = ",i=" + str(i) + ",alpha_m=" + str(alpha_m) + ",mu_m=" + str(mu_m) + ",gamma=" + str(gamma)
+	variables = ",new_LB,i=" + str(i) + ",alpha_m=" + str(alpha_m) + ",mu_m=" + str(mu_m) + ",gamma=" + str(gamma)
 	title = "VM cost" + variables
 	filename = '../graphs/VMcost' + variables + '.png'
 	fig = plt.figure()
-	plt.plot(xaxis, yaxis[0], 'ro')
-	plt.plot(xaxis, yaxis[1], 'bo')
+	plt.plot(xaxis[0], results[0], 'ro')
+	plt.plot(xaxis[1], results[1], 'bo')
 	plt.ylabel('Total VM Cost')
 	if len(legends) != 0:
 		plt.legend(legends, loc='upper left')
@@ -392,14 +400,16 @@ def calcVMcost(alpha_m, mu_m, gamma, i, lambda_m, mode):
 	ub_den = (gamma * i) + (mu_m * i) - (lambda_m)
 	lb_num = ub_num
 	lb_den = (2 * gamma * i) + (mu_m * i) - (lambda_m)
+	val_lb = (alpha_m/gamma)*(1/((1/mu_m) + (i/lambda_m) + (1/gamma)))*i
 	if mode == 'upper':
 		if ub_den == 0:
 			return 'div0'
 		return serve_jobs_cost + (ub_num/ub_den)
 	elif mode == 'lower':
-		if lb_den == 0:
-			return 'div0'
-		return serve_jobs_cost + (lb_num/lb_den)
+		# if lb_den == 0:
+		# 	return 'div0'
+		# return serve_jobs_cost + (lb_num/lb_den) # OLD Lower Bound
+		return serve_jobs_cost + val_lb # NEW Lower Bound
 	else:
 		print 'wrong mode to calcVMcost'
 	return 'wrong mode to calcVMcost'
