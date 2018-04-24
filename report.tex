@@ -11,8 +11,10 @@
 \usepackage{multicol}
 \usepackage{blkarray}
 \usepackage{dsfont}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
 
 \parskip=11pt
+\newcommand{\red}[1]{\textcolor{red}{#1}}
 
 \title{Performance and Economic Models in the Cloud:\\
 Case of Serverless Computing and Spot Instances}
@@ -207,28 +209,84 @@ A VM can be thought of as an employee - costs less but you have to pay them all 
 
 For systems with dynamic workloads, we can think of threshold policies with the response time as the constraint (which works out a constraint on utilization). Suppose your system is running at capacity with N VMs. Now if a little extra load comes in, it is cheaper to send it to serverless, until the excess load becomes enough so that N+1 VMs are more cost effective. The same thing applies in the reverse direction - if the load reduces, it becomes cost effective to shut down a VM and send the excess load to serverless, until the load reduces enough to rebalance amongst the N-1 servers and maintain the utilization.
 
+\subsection{Forward case}
+
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{consulting_model}
+    \includegraphics[width=0.5\textwidth]{forward_consulting_model}
     \caption{Serverless is like Consulting}
-    \label{fig:model}
+    \label{fig:forward_model}
 \end{figure}
 
-\subsection{When to instantiate a new VM} 
+ Assume that the entire workload ($\lambda$) is executed on $N$ machines. In this case, the workload is increasing.
 
-Assume that the workload ($\lambda$) is executed on $N$ machines. Extra workload ($\epsilon$) comes in. We need to calculate the value of the extra workload ($\epsilon$) for which it is cheaper to instantiate a new VM, such that all jobs are executed on the VM. \\ \\ 
+\subsubsection{When to send jobs to serverless}
+
+Extra workload ($\epsilon$) comes in. We need to calculate the value of the extra workload ($\epsilon$) for which we need to send jobs to serverless. We send jobs above the value of $\epsilon$ to serverless. We send the jobs to serverless under the condition that the active VMs are unable to meet the response times for the workload. \red{The response times will be violated when the response time of the current workload exceeds the response time requirement ($\frac{1}{r_{user}}$), which is a constant, specified by the user.} \\ \\
+Total workload = $\lambda + \epsilon$ \\
+Average response time for M/M/1 queue = $\frac{1}{\mu_m - (\lambda + \epsilon)}$ = $\frac{1}{\mu_m - \lambda - \epsilon}$ \\
+%Average response time = Average time spent in queue + Average service time \\
+%Average time spent in queue = Average service time$* (\frac{utilization}{1 - utilization})$ = $(\frac{1}{\mu})(\frac{\frac{\lambda + \epsilon}{\mu}}{1 - \frac{\lambda + \epsilon}{\mu}})$ \\
+%Average response time = $(\frac{1}{\mu})(\frac{\frac{\lambda + \epsilon}{\mu}}{1 - \frac{\lambda + \epsilon}{\mu}}) + \frac{1}{\mu}$ \\
+Average response time violation condition : Average response time $> \frac{1}{r_{user}}$  \\
+To calculate the value of extra workload ($\epsilon$):
+ $\frac{1}{\mu_m - \lambda - \epsilon} = \frac{1}{r_{user}}$ \\
+$\epsilon = \mu_m - \lambda - r_{user}$
+
+If the extra workload $>= \epsilon$, we start sending jobs to serverless until we decide that it is cheaper to instantiate a new VM and execute the entire workload on the VMs.
+ 
+
+\subsubsection{When to instantiate a new VM} 
+
+Extra workload ($\epsilon'$) comes in, where  ($\epsilon' > \epsilon$). We need to calculate the value of the extra workload ($\epsilon'$) for which it is cheaper to instantiate a new VM, such that all jobs are executed on the VM. \\ \\ 
 For a time interval T, 
 
 Cost for VM (always ON)  = $\alpha_m T$ \\
 
-Cost for serverless in T = $\alpha_s$ * number of jobs arrived in T * response time per job = $\alpha_s (\epsilon T) (\frac{1}{\mu_s})$ 
+Cost for serverless in T = $\alpha_s \times $number of jobs arrived in T $\times$ response time per job = $\alpha_s (\epsilon' T) (\frac{1}{\mu_s})$ 
 
-To calculate the value of extra workload ($\epsilon$), cost for VM = cost for serverless
+To calculate the value of extra workload ($\epsilon'$), cost for VM = cost for serverless
 
-$\alpha_m T = \alpha_s (\epsilon T) (\frac{1}{\mu_s})$ 
+$\alpha_m T = \alpha_s (\epsilon' T) (\frac{1}{\mu_s})$ 
 
-$\epsilon =  \frac{\alpha_m}{\alpha_s} \mu_s$ \\ \\
-If the extra workload $> \epsilon$, we instantiate a new VM.
+$\epsilon' =  \frac{\alpha_m}{\alpha_s} \mu_s$ \\ \\
+If the extra workload $>= \epsilon'$, we instantiate a new VM.
+
+\subsection{Backward case}
+
+Assume that the entire workload ($\lambda$) is executed on $N$ machines. In this case, the workload is decreasing and we might be better off by shutting down a VM. We need to calculate two thresholds: 1) when to shut down a VM such that the workload is executed by $N-1$ VMs and serverless 2) when to shut down a VM such that the entire workload is executed by $N-1$ VMs.
+
+\subsubsection{When to shut down a VM such that the entire workload is executed by $N-1$ VMs.}
+
+Assume that the workload is reduced by an amount $\sigma$ in a time interval $T$. In this case, the $N$ VMs are underutilized and we can use $N-1$ to execute the entire workload such that the response time ($r_{user}$) requirement is not violated. Essentially, this case boils down to calculating the maximum workload that will lead to maximum utilization of $N-1$ VMs.
+
+Total workload = $\lambda - \sigma$
+Average response time = $\frac{1}{\mu_m - (\lambda - \sigma)}$ = $\frac{1}{\mu_m - \lambda + \sigma}$ 
+
+The maximum workload will be obtained when the average response time is equal to the response time requirement.
+
+$\frac{1}{\mu_m - \lambda + \sigma} = \frac{1}{r_{user}}$ 
+
+$\sigma = r_{user} - \mu_m + \lambda$
+
+\subsubsection{When to shut down a VM, where the workload is executed by $N-1$ VMs and serverless}
+
+Assume that the workload is reduced by an amount $\sigma'$ (where $\sigma' < \sigma$) in a time interval $T$. We want to shut down a VM when the cost of running $N$ VMs is greater than the cost of $N-1$ VMs plus serverless. Note that at this threshold value, the $N$ VMs will be underutilized and we can pack jobs in $N$ VMs with a higher utilization.
+
+Cost of $N$ VMs = $N \alpha_m T$
+
+Cost of $N-1$ VMs = $(N-1)\alpha_m T$
+
+\red{Is this correct?}Cost of serverless for time $T$ = $\alpha_s \times$ number of jobs in T $\times$ response time per job \\ 
+= $\alpha_s \times ((\lambda - \sigma) - (\lambda - \sigma')) T \times (\frac{1}{\mu_s})$ 
+
+To calculate the threshold value, cost of $N$ VMs = cost of $N-1$ VMs + cost of serverless
+
+$N \alpha_m T= (N-1)\alpha_m T + \alpha_s \times ((\lambda - \sigma) - (\lambda - \sigma')) T \times (\frac{1}{\mu_s})$
+
+$\sigma' = (\frac{\alpha_m}{\alpha_s}) \mu_s + \sigma$
+
+
 
 \end{document}
 
