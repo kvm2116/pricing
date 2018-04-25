@@ -505,7 +505,7 @@ def calcVMcost(alpha_m, mu_m, gamma, i, lambda_m, mode):
 
 def plotmultipleVMs_vary_mu():
 	max_lambda = 24
-	lambdas = [.1*x for x in range(0,((max_lambda+1)*10))]
+	lambdas = [.01*x for x in range(0,((max_lambda+1)*100))]
 	alpha_v_multiple = 1.0
 	alpha_s = 3*alpha_v_multiple
 	mu_ratios = [1,2,3]
@@ -550,20 +550,23 @@ def plotmultipleVMs_vary_mu():
 	for ratio in mu_ratios:
 		key = r'$\mu_v$=' + str(ratio) + r'$\mu_s$' + ', ' + r'$\alpha_v$=' + str(ratio)
 		legends.append(key)
-	plt.plot(lambdas, results[0], 'r', linewidth=4)
-	plt.plot(lambdas, results[1], 'g', linewidth=4)
-	plt.plot(lambdas, results[2], 'b', linewidth=4)
+	plt.plot(lambdas[::200], results[0][::200], 'ro', markersize=7)
+	plt.plot(lambdas[::200], results[1][::200], 'g^', markersize=7)
+	plt.plot(lambdas[::200], results[2][::200], 'bs', markersize=7)
+	plt.plot(lambdas, results[0], 'r', linewidth='2')
+	plt.plot(lambdas, results[1], 'g', linewidth='2')
+	plt.plot(lambdas, results[2], 'b', linewidth='2')
 	# plt.plot(lambdas, results[3], 'cD')
 	plt.legend(legends, loc='upper left')
-	plt.ylabel('Cost')
+	plt.ylabel('Cost', fontsize=25)
 	# title = "Multiple VMs, different price ratios"
 	# fig.suptitle(title)
-	plt.xlabel(r'$\lambda$')
+	plt.xlabel(r'$\lambda$', fontsize=25)
 	plt.savefig(filename)
 
 def plotmultipleVMs_vary_price_ratio():
 	max_lambda = 24
-	lambdas = [.1*x for x in range(0,((max_lambda+1)*10))]
+	lambdas = [.01*x for x in range(0,((max_lambda+1)*100))]
 	alpha_v = 1.0
 	price_ratios = [1.3,3,10]
 	mu_v = 7.0
@@ -609,15 +612,18 @@ def plotmultipleVMs_vary_price_ratio():
 		# key = "hello" + str(ratio) 
 		key = r'$\alpha_s$=' + str(ratio) + r'$\alpha_v$'
 		legends.append(key)
-	plt.plot(lambdas, results[0], 'r', linewidth=4)
-	plt.plot(lambdas, results[1], 'g', linewidth=4)
-	plt.plot(lambdas, results[2], 'b', linewidth=4)
+	plt.plot(lambdas[::200], results[0][::200], 'ro', markersize=7)
+	plt.plot(lambdas[::200], results[1][::200], 'g^', markersize=7)
+	plt.plot(lambdas[::200], results[2][::200], 'bs', markersize=7)
+	plt.plot(lambdas, results[0], 'r', linewidth='2')
+	plt.plot(lambdas, results[1], 'g', linewidth='2')
+	plt.plot(lambdas, results[2], 'b', linewidth='2')
 	# plt.plot(lambdas, results[3], 'cD')
 	plt.legend(legends, loc='upper left')
-	plt.ylabel('Cost')
+	plt.ylabel('Cost', fontsize=25)
 	# title = "Multiple VMs, different price ratios"
 	# fig.suptitle(title)
-	plt.xlabel(r'$\lambda$')
+	plt.xlabel(r'$\lambda$', fontsize=25)
 	plt.savefig(filename)
 
 def plotmultipleVMonoff_vary_price_ratio():
@@ -722,10 +728,15 @@ def plotmultipleVMonoff_vary_price_ratio():
 		# key = "hello" + str(ratio) 
 		key = r'$\alpha_s$=' + str(ratio) + r'$\alpha_v$'
 		legends.append(key)
-	plt.plot(lambdas, results[0], 'c', linewidth=4)
-	plt.plot(lambdas, results[1], 'r', linewidth=4)
-	plt.plot(lambdas, results[2], 'g', linewidth=4)
-	plt.plot(lambdas, results[3], 'b', linewidth=4)
+	plt.plot(lambdas[::200], results[0][::200], 'c*', markersize=7)
+	plt.plot(lambdas[::200], results[1][::200], 'ro', markersize=7)
+	plt.plot(lambdas[::200], results[2][::200], 'g^', markersize=7)
+	plt.plot(lambdas[::200], results[3][::200], 'bs', markersize=7)
+	plt.plot(lambdas, results[0], 'c', linewidth='2')
+	plt.plot(lambdas, results[1], 'r', linewidth='2')
+	plt.plot(lambdas, results[2], 'g', linewidth='2')
+	plt.plot(lambdas, results[3], 'b', linewidth='2')
+
 	plt.legend(legends, loc='upper left')
 	plt.ylabel('Cost')
 	# title = "Multiple VMs, different price ratios"
@@ -829,21 +840,31 @@ def plotmultipleVMonoff_vary_mu():
 							cost = Cv
 					results_price.append(cost)
 		results.append(results_price)
-	filename = '../graphs/multVMonoff_vary_mu'  + '.png'
+	filename = '../graphs/multVMsonoff_vary_mu'  + '.png'
 	fig = plt.figure()
 	legends = []
 	for ratio in mu_ratios:
 		key = r'$\mu_v$=' + str(ratio) + r'$\mu_s$' + ', ' + r'$\alpha_v$=' + str(ratio)
 		legends.append(key)
-	plt.plot(lambdas, results[0], 'r', linewidth=4)
-	plt.plot(lambdas, results[1], 'g', linewidth=4)
-	plt.plot(lambdas, results[2], 'b', linewidth=4)
+	# plt.plot(lambdas, results[0], 'r', marker='o', linestyle='-')
+	# plt.plot(lambdas, results[1], 'g', marker='s', linestyle='-')
+	# plt.plot(lambdas, results[2], 'b', marker='^', linestyle='-')
+	plt.plot(lambdas[::200], results[0][::200], 'ro', markersize=7)
+	plt.plot(lambdas[::200], results[1][::200], 'g^', markersize=7)
+	plt.plot(lambdas[::200], results[2][::200], 'bs', markersize=7)
+	plt.plot(lambdas, results[0], 'r', linewidth='2')
+	plt.plot(lambdas, results[1], 'g', linewidth='2')
+	plt.plot(lambdas, results[2], 'b', linewidth='2')
+	
+	# plt.plot(lambdas, results[1], 'g', linewidth='3')
+	# plt.plot(lambdas, results[2], 'b', linewidth='3')
+
 	# plt.plot(lambdas, results[3], 'cD')
 	plt.legend(legends, loc='upper left')
-	plt.ylabel('Cost')
+	plt.ylabel('Cost', fontsize=25)
 	# title = "Multiple VMs, different price ratios"
 	# fig.suptitle(title)
-	plt.xlabel(r'$\lambda$')
+	plt.xlabel(r'$\lambda$', fontsize=25)
 	plt.savefig(filename)
 
 def plotmultipleVMonoff_vary_gamma():
@@ -949,22 +970,137 @@ def plotmultipleVMonoff_vary_gamma():
 		# key = "hello" + str(ratio) 
 		key = '1/' + r'$\gamma$' + ' = ' + str(int(1/ratio))
 		legends.append(key)
-	plt.plot(lambdas, results[0], 'r', linewidth=4)
-	plt.plot(lambdas, results[1], 'g', linewidth=4)
-	plt.plot(lambdas, results[2], 'b', linewidth=4)
+	plt.plot(lambdas[::100], results[0][::100], 'ro', markersize=7)
+	plt.plot(lambdas[::100], results[1][::100], 'g^', markersize=7)
+	plt.plot(lambdas[::100], results[2][::100], 'bs', markersize=7)
+	plt.plot(lambdas, results[0], 'r', linewidth='2')
+	plt.plot(lambdas, results[1], 'g', linewidth='2')
+	plt.plot(lambdas, results[2], 'b', linewidth='2')
 	# plt.plot(lambdas, results[3], 'cD')
 	plt.legend(legends, loc='upper left')
-	plt.ylabel('Cost')
+	plt.ylabel('Cost', fontsize=25)
 	# title = "Multiple VMs, different price ratios"
 	# fig.suptitle(title)
-	plt.xlabel(r'$\lambda$')
+	plt.xlabel(r'$\lambda$', fontsize=25)
 	plt.savefig(filename)
+
+def plotcostserv_to_vm_ON():
+	max_lambda = 3
+	lambdas = [x for x in range(1, max_lambda+1)]
+	mu_s = 10.0
+	max_alpha_v = 7 
+	alpha_v_range = [0.01*x for x in range(0,((max_alpha_v+1)*100))]
+
+	results = []
+	for val_lambda in lambdas:
+		results_alpha_s = []
+		for alpha_v in alpha_v_range:
+			alpha_s = alpha_v * (mu_s/val_lambda)
+			results_alpha_s.append(alpha_s)
+		results.append(results_alpha_s)
+	filename = '../graphs/as_vs_av_ON'  + '.png'
+	fig = plt.figure()
+	legends = []
+	for val_lambda in lambdas: 
+		key = r'$\lambda$' + ' = ' + str(val_lambda)
+		legends.append(key)
+	plt.plot(alpha_v_range[::100], results[0][::100], 'ro', markersize=7)
+	plt.plot(alpha_v_range[::100], results[1][::100], 'g^', markersize=7)
+	plt.plot(alpha_v_range[::100], results[2][::100], 'bs', markersize=7)
+	plt.plot(alpha_v_range, results[0], 'r', linewidth='2')
+	plt.plot(alpha_v_range, results[1], 'g', linewidth='2')
+	plt.plot(alpha_v_range, results[2], 'b', linewidth='2')
+	# plt.plot(lambdas, results[3], 'cD')
+	plt.legend(legends, loc='upper left')
+	plt.ylabel(r'$\alpha_s$', fontsize=25)
+	plt.ylim([0,90])
+	# title = "Multiple VMs, different price ratios"
+	# fig.suptitle(title)
+	plt.xlabel(r'$\alpha_v$', fontsize=25)
+	plt.savefig(filename)
+
+def plotcostserv_to_vm_ON_OFF():
+	max_lambda = 3
+	lambdas = [x for x in range(1, max_lambda+1)]
+	mu_v = 7.0
+	mu_s = 10.0
+	max_alpha_v = 7 
+	alpha_v_range = [0.01*x for x in range(0,((max_alpha_v+1)*100))]
+	gamma = 1.0
+
+	results = []
+	for val_lambda in lambdas:
+		results_alpha_s = []
+		for alpha_v in alpha_v_range:
+			alpha_s = alpha_v * (mu_s/val_lambda) * (  (1/gamma) + (1/(mu_v - val_lambda) )/(  (1/gamma) + (1/(mu_v - val_lambda) ) + (1/val_lambda)  )    )
+			results_alpha_s.append(alpha_s)
+		results.append(results_alpha_s)
+	filename = '../graphs/as_vs_av_ON_OFF'  + '.png'
+	fig = plt.figure()
+	legends = []
+	for val_lambda in lambdas: 
+		key = r'$\lambda$' + ' = ' + str(val_lambda)
+		legends.append(key)
+	plt.plot(alpha_v_range[::100], results[0][::100], 'ro', markersize=7)
+	plt.plot(alpha_v_range[::100], results[1][::100], 'g^', markersize=7)
+	plt.plot(alpha_v_range[::100], results[2][::100], 'bs', markersize=7)
+	plt.plot(alpha_v_range, results[0], 'r', linewidth='2')
+	plt.plot(alpha_v_range, results[1], 'g', linewidth='2')
+	plt.plot(alpha_v_range, results[2], 'b', linewidth='2')
+	plt.legend(legends, loc='upper left')
+	plt.ylabel(r'$\alpha_s$', fontsize=25)
+	# title = "Multiple VMs, different price ratios"
+	# fig.suptitle(title)
+	plt.ylim([0,90])
+	plt.xlabel(r'$\alpha_v$', fontsize=25)
+	plt.savefig(filename)
+
+def plotmus_to_muv_ON_OFF():
+	max_lambda = 3
+	lambdas = [x for x in range(1, max_lambda+1)]
+	gamma = 1.0
+	beta = 0.9
+	alpha_s = 3.0
+	min_alpha_v = 1.0
+	results = []
+	mu_v_values_final = []
+	for val_lambda in lambdas:
+		min_mu_v = val_lambda/beta
+		mu_v_values = []
+		results_mu_v = []
+		for i in range(0,600):
+			mu_v = min_mu_v + (0.01*i)
+			mu_v_values.append(mu_v)
+			alpha_v = (min_alpha_v/min_mu_v) * mu_v
+			mu_s = (alpha_s/alpha_v) * val_lambda * (1 / (  (1/gamma) + (1/(mu_v - val_lambda) )/(  (1/gamma) + (1/(mu_v - val_lambda) ) + (1/val_lambda)  )    ))
+			results_mu_v.append(mu_s)
+		results.append(results_mu_v)
+		mu_v_values_final.append(mu_v_values)
+	filename = '../graphs/mus_vs_muv_ON_OFF'  + '.png'
+	fig = plt.figure()
+	plt.plot(mu_v_values_final[0][::50], results[0][::50], 'ro', markersize=7)
+	plt.plot(mu_v_values_final[1][::50], results[1][::50], 'g^', markersize=7)
+	plt.plot(mu_v_values_final[2][::50], results[2][::50], 'bs', markersize=7)
+	plt.plot(mu_v_values_final[0], results[0], 'r', linewidth='2')
+	plt.plot(mu_v_values_final[1], results[1], 'g', linewidth='2')
+	plt.plot(mu_v_values_final[2], results[2], 'b', linewidth='2')
+	legends = []
+	for val_lambda in lambdas: 
+		key = r'$\lambda$' + ' = ' + str(val_lambda)
+		legends.append(key)
+	plt.legend(legends, loc='upper left')
+	plt.ylabel(r'$\mu_s$', fontsize=25)
+	plt.xlabel(r'$\mu_v$', fontsize=25)
+	plt.savefig(filename)
+
 
 def main():
 	if len(sys.argv) != 2:
 		print "USAGE: python generate_plots.py <exp_type>"
 		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"
-		print "<exp_type> : singleVM/plotmultipleVMs_vary_price_ratio/plotmultipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/plotmultipleVMonoff_vary_mu/plotmultipleVMonoff_vary_gamma"
+		print "<exp_type> : plotmultipleVMs_vary_price_ratio/plotmultipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/plotmultipleVMonoff_vary_mu/plotmultipleVMonoff_vary_gamma"
+		print "<exp_type> : plotcostserv_to_vm_ON/plotcostserv_to_vm_ON_OFF"
+		print "<exp_type> : plotmus_to_muv_ON_OFF"
 		return
 	exp_type = sys.argv[1]
 	if exp_type == 'vary_startup_delay':
@@ -989,10 +1125,18 @@ def main():
 		plotmultipleVMonoff_vary_mu()
 	elif exp_type == 'plotmultipleVMonoff_vary_gamma':
 		plotmultipleVMonoff_vary_gamma()
+	elif exp_type == 'plotcostserv_to_vm_ON':
+		plotcostserv_to_vm_ON()
+	elif exp_type == 'plotcostserv_to_vm_ON_OFF':
+		plotcostserv_to_vm_ON_OFF()
+	elif exp_type == 'plotmus_to_muv_ON_OFF':
+		plotmus_to_muv_ON_OFF()
 	else:
 		print "Wrong <exp_type>"
 		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"
-		print "<exp_type> : singleVM/plotmultipleVMs_vary_price_ratio/plotmultipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/plotmultipleVMonoff_vary_mu/plotmultipleVMonoff_vary_gamma"
+		print "<exp_type> : plotmultipleVMs_vary_price_ratio/plotmultipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/plotmultipleVMonoff_vary_mu/plotmultipleVMonoff_vary_gamma"
+		print "<exp_type> : plotcostserv_to_vm_ON/plotcostserv_to_vm_ON_OFF"
+		print "<exp_type> : plotmus_to_muv_ON_OFF"
 
 if __name__ == '__main__':
 	main()
