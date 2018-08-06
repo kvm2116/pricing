@@ -1,7 +1,8 @@
 """
 Pricing Analysis: create plots for different serverless vs VMs scenario
 
-Usage: python generate_plots.py <exp_type>
+VM : M/M/1 model
+Usage: python generate_plots_mm1.py <exp_type>
 <exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM
 
 Author: Kunal Mahajan
@@ -1096,7 +1097,7 @@ def plotmus_to_muv_ON_OFF():
 
 def main():
 	if len(sys.argv) != 2:
-		print "USAGE: python generate_plots.py <exp_type>"
+		print "USAGE: python generate_plots_mm1.py <exp_type>"
 		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
 		print "<exp_type> : costserv_to_vm_ON/costserv_to_vm_ON_OFF"
