@@ -174,7 +174,7 @@ def AO_vary_failure_rate():
 	
 		for val_lambda in lambdas:
 			cost = 0
-			val_lambda += val_lambda*fail_rate
+			val_lambda = calculate_lambda(val_lambda, fail_rate, mu_spot, mu_v, N_SPOT, beta)
 			if val_lambda > prev_transition_point:		# spot instances are all USED UP. Start using on-demand VMs
 				val_lambda -= prev_transition_point
 				if L_v <= L_sl_v:						# Case 1: spot service capacity is lower than transition point from Serverless to Spot
@@ -337,13 +337,23 @@ def OO_vary_price_ratio_no_fail():
 	plt.xlabel(r'$\lambda$', fontsize=25)
 	plt.savefig(filename)
 
+def calculate_lambda(arrival_lambda, fail_rate, mu_spot, mu_v, N_SPOT, beta):
+	new_lambda_only_spots = arrival_lambda/(1-fail_rate)
+	num_spot_required = new_lambda_only_spots/(beta*mu_spot)
+	if num_spot_required <= N_SPOT:
+		return new_lambda_only_spots
+	else:
+		load_on_spots = N_SPOT * beta * mu_spot
+		additional_load_from_spots = load_on_spots * fail_rate
+		return additional_load_from_spots + arrival_lambda
+	
 # OO, failure rate for spot instances
 def OO_vary_failure_rate():
 	max_lambda = 19
-	lambdas = [.01*x for x in range(0,((max_lambda+1)*100))]
+	lambdas = [.01*x for x in range(1,((max_lambda+1)*100))]
 
 	# Number of spot VMs:
-	N_SPOT = 3
+	N_SPOT = 10
 	# Max capacity of VM allowed:
 	beta = 0.9 		
 	# startup delay
@@ -356,7 +366,7 @@ def OO_vary_failure_rate():
 	alpha_sl = 2.5*alpha_v	
 
 	# Failure rate
-	failure_rates = [0,0.1,0.2,0.4]
+	failure_rates = [0.1,0.2,0.4,0.8]
 
 	# Service rates
 	mu_v = 8.0
@@ -392,7 +402,9 @@ def OO_vary_failure_rate():
 		
 		for val_lambda in lambdas:
  			cost = 0
- 			val_lambda += val_lambda*fail_rate
+ 			# val_lambda += val_lambda*fail_rate
+ 			val_lambda = calculate_lambda(val_lambda, fail_rate, mu_spot, mu_v, N_SPOT, beta)
+ 			
 			if val_lambda > prev_transition_point:		# spot instances are all USED UP. Start using on-demand VMs
 				val_lambda -= prev_transition_point
 				if L_v <= L_sl_v:						# Case 1: spot service capacity is lower than transition point from Serverless to Spot
@@ -448,8 +460,9 @@ def OO_vary_failure_rate():
 	plt.xlabel(r'$\lambda$', fontsize=25)
 	plt.savefig(filename)
 
+
 def main():
-	if len(sys.argv) != 2:
+	if len(sys.argv) < 2:
 		print "USAGE: python generate_plots_mg1_spot.py <exp_type>"
 		print "<exp_type> : AO_vary_price_ratio_no_fail/AO_vary_failure_rate"
 		print "<exp_type> : OO_vary_price_ratio_no_fail/OO_vary_failure_rate"
@@ -462,7 +475,7 @@ def main():
 	elif exp_type == 'OO_vary_price_ratio_no_fail':
 		OO_vary_price_ratio_no_fail()
 	elif exp_type == 'OO_vary_failure_rate':
-		OO_vary_failure_rate()
+		OO_vary_failure_rate() 
 	else:
 		print "Wrong <exp_type>"
 		print "<exp_type> : AO_vary_price_ratio_no_fail/AO_vary_failure_rate"
