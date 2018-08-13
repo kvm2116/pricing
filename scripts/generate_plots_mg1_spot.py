@@ -707,11 +707,182 @@ def OO_vary_failure_rate_servers(fail_rate):
 	plt.xlabel(r'$\lambda$', fontsize=25)
 	plt.savefig(filename)
 
+
+# OO, vary spot/VM price ratio
+def OO_price_ratio_spot_od():
+	val_lambda = 20
+
+	omega_savings_percent = [.01*x for x in range(1,91)]
+
+	# Number of spot VMs:
+	N_SPOT = 3
+	# Max capacity of VM allowed:
+	beta = 0.9 		
+	# startup delay
+	gamma = 1
+
+	# Cost
+	alpha_v = 1.0
+	alpha_sl = 2.5*alpha_v	
+
+	# Failure rate
+	fail_rate = 0.1
+	# Service rates
+	mu_v = 8.0
+	mu_sl = 10.0
+	delta = 0.8
+	mu_spot = delta*mu_v
+
+	# Current Number of VMs:
+	n_spot = 0
+	n_v = 0
+	
+	# Transition points for VMs
+	
+	prev_transition_point = 0
+
+	# Previous transition cost:
+	prev_transition_cost = 0
+
+	results = []
+	message = ""
+	spots = []
+	vms = []
+	serv = []
+
+	# prev_transition_cost = n_spot * alpha_spot
+	count = 0
+	for omega_savings_ratio in omega_savings_percent:
+		n_spot = 0
+		# print "failure rate = %f" % fail_rate
+		alpha_spot = (1-omega_savings_ratio) * alpha_v
+		# results_price = []
+		quants = []
+		count += 1
+		
+ 		num_spot, num_vm, num_serverless, cost = calculate_vm_dist_cost(val_lambda, fail_rate, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma)
+		# 	if count == 1:
+		# 		print "Spot = %f\tOD = %f\tServ = %fval_lambda=%f\n\n" % (num_spot, num_vm, num_serverless,val_lambda)
+		spots.append(num_spot)
+		vms.append(num_vm)
+		if num_serverless > 0:
+			serv.append(1)
+		else:
+			serv.append(0)
+		# results_price.append(cost)
+		
+		results.append(cost)
+	filename = '../graphs/mg1_spot/OO_price_ratio_spot_OD' + str(fail_rate) + '_servers'  + '.png'
+	fig = plt.figure()
+	legends = ['Spot', 'OnDemand', 'Serverless']
+	# plt.plot(omega_savings_percent[::5], results[::5], 'c*', markersize=7)
+	plt.plot(omega_savings_percent[::5], spots[::5], 'ro', markersize=7)
+	plt.plot(omega_savings_percent[::5], vms[::5], 'g^', markersize=7)
+	plt.plot(omega_savings_percent[::5], serv[::5], 'bs', markersize=7)
+	# plt.plot(omega_savings_percent, results, 'c', linewidth='2')
+	plt.plot(omega_savings_percent, spots, 'r', linewidth='2')
+	plt.plot(omega_savings_percent, vms, 'g', linewidth='2')
+	plt.plot(omega_savings_percent, serv, 'b', linewidth='2')
+
+	plt.legend(legends, loc='upper right', fontsize=21)
+	plt.ylabel('Number of VMs', fontsize=25)
+	plt.autoscale(enable=False, axis='x')
+
+	# fig.suptitle(title)
+	plt.xlabel('Price savings of Spot over OnDemand VMs', fontsize=25)
+	plt.savefig(filename)
+
+# OO, vary spot/VM price ratio
+def OO_failure_rate_impact():
+	val_lambda = 7.2
+
+	failure_rates = [.01*x for x in range(1,99)]
+
+	# Number of spot VMs:
+	N_SPOT = 3
+	# Max capacity of VM allowed:
+	beta = 0.9 		
+	# startup delay
+	gamma = 1
+
+	# Cost
+	alpha_v = 1.0
+	alpha_sl = 2.5*alpha_v	
+	omega_savings_percent = 0.75
+	alpha_spot = (1-omega_savings_percent) * alpha_v
+
+	# Failure rate
+	fail_rate = 0.1
+	# Service rates
+	mu_v = 8.0
+	mu_sl = 10.0
+	delta = 0.8
+	mu_spot = delta*mu_v
+
+	# Current Number of VMs:
+	n_spot = 0
+	n_v = 0
+	
+	# Transition points for VMs
+	
+	prev_transition_point = 0
+
+	# Previous transition cost:
+	prev_transition_cost = 0
+
+	results = []
+	message = ""
+	spots = []
+	vms = []
+	serv = []
+
+	# prev_transition_cost = n_spot * alpha_spot
+	count = 0
+	for fail_rate in failure_rates:
+		n_spot = 0
+		# print "failure rate = %f" % fail_rate
+		
+		# results_price = []
+		quants = []
+		count += 1
+		
+ 		num_spot, num_vm, num_serverless, cost = calculate_vm_dist_cost(val_lambda, fail_rate, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma)
+		print "Spot = %f\tOD = %f\tServ = %fval_lambda=%f\n\n" % (num_spot, num_vm, num_serverless,val_lambda)
+		spots.append(num_spot)
+		vms.append(num_vm)
+		if num_serverless > 0:
+			serv.append(1)
+		else:
+			serv.append(0)
+		# results_price.append(cost)
+		
+		results.append(cost)
+	filename = '../graphs/mg1_spot/OO_failure_rate_impact_servers'  + '.png'
+	fig = plt.figure()
+	legends = ['Spot', 'OnDemand', 'Serverless']
+	# plt.plot(failure_rates[::5], results[::5], 'c*', markersize=7)
+	plt.plot(failure_rates[::5], spots[::5], 'ro', markersize=7)
+	plt.plot(failure_rates[::5], vms[::5], 'g^', markersize=7)
+	plt.plot(failure_rates[::5], serv[::5], 'bs', markersize=7)
+	# plt.plot(failure_rates, results, 'c', linewidth='2')
+	plt.plot(failure_rates, spots, 'r', linewidth='2')
+	plt.plot(failure_rates, vms, 'g', linewidth='2')
+	plt.plot(failure_rates, serv, 'b', linewidth='2')
+
+	plt.legend(legends, loc='upper right', fontsize=21)
+	plt.ylabel('Number of VMs', fontsize=25)
+	plt.autoscale(enable=False, axis='x')
+
+	# fig.suptitle(title)
+	plt.xlabel('Spot failure rate %', fontsize=25)
+	plt.savefig(filename)
+
 def main():
 	if len(sys.argv) < 2:
 		print "USAGE: python generate_plots_mg1_spot.py <exp_type>"
 		print "<exp_type> : AO_vary_price_ratio_no_fail/AO_vary_failure_rate"
 		print "<exp_type> : OO_vary_price_ratio_no_fail/OO_vary_failure_rate/OO_vary_failure_rate_servers"
+		print "<exp_type> : OO_price_ratio_spot_od/OO_failure_rate_impact"
 		return
 	exp_type = sys.argv[1]
 	if exp_type == 'AO_vary_price_ratio_no_fail':
@@ -724,29 +895,15 @@ def main():
 		OO_vary_failure_rate() 
 	elif exp_type == 'OO_vary_failure_rate_servers':
 		OO_vary_failure_rate_servers(float(sys.argv[2])) 
+	elif exp_type == 'OO_price_ratio_spot_od':
+		OO_price_ratio_spot_od()
+	elif exp_type == 'OO_failure_rate_impact':
+		OO_failure_rate_impact()
 	else:
 		print "Wrong <exp_type>"
 		print "<exp_type> : AO_vary_price_ratio_no_fail/AO_vary_failure_rate"
-		print "<exp_type> : OO_vary_price_ratio_no_fail/OO_vary_failure_rate"
-
-
-# min_num_spot = num_spot_only_required-1
-# 		min_num_spot_serverless = new_lambda_only_spots - (min_num_spot*L_spot)
-# 		min_spot_serv_cost = (alpha_spot*((L_spot*(mu_spot + gamma))/((mu_spot*(L_spot + gamma))))*min_num_spot) + (alpha_sl*(min_num_spot_serverless/mu_sl))		
-# 		spot_serv_cost_k_1 = (alpha_spot*((L_spot*(mu_spot + gamma))/((mu_spot*(L_spot + gamma))))*min_num_spot) + (alpha_spot*((min_num_spot_serverless*(mu_spot + gamma))/((mu_spot*(min_num_spot_serverless + gamma)))))
-# 		if min_spot_serv_cost > spot_serv_cost_k_1:
-# 			min_num_spot += 1
-# 			min_num_spot_serverless = 0
-# 			min_spot_serv_cost = spot_serv_cost_k_1
-
-# min_num_vm = num_vm_only_required-1
-# 		min_num_vm_serverless = arrival_lambda - (min_num_vm*L_v)
-# 		min_vm_serv_cost = (alpha_v*((L_v*(mu_v + gamma))/((mu_v*(L_v + gamma))))*(num_vm_only_required-1)) + (alpha_sl*(min_num_vm_serverless/mu_sl))
-# 		vm_serv_cost_k_1 = (alpha_v*((L_v*(mu_v + gamma))/((mu_v*(L_v + gamma))))*(num_vm_only_required-1)) + (alpha_v*((min_num_vm_serverless*(mu_v + gamma))/((mu_v*(min_num_vm_serverless + gamma)))))
-# 		if min_vm_serv_cost > vm_serv_cost_k_1:
-# 			min_num_vm += 1
-# 			min_num_vm_serverless = 0
-# 			min_vm_serv_cost = vm_serv_cost_k_1
+		print "<exp_type> : OO_vary_price_ratio_no_fail/OO_vary_failure_rate/OO_vary_failure_rate_servers"
+		print "<exp_type> : OO_price_ratio_spot_od/OO_failure_rate_impact"
 
 if __name__ == '__main__':
 	main()
