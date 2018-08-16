@@ -777,6 +777,7 @@ def OO_price_ratio_spot_od():
 	spot_cost = []
 	serv_cost = []
 	vm_cost = []
+	# ratio = []
 
 	# prev_transition_cost = n_spot * alpha_spot
 	count = 0
@@ -784,6 +785,9 @@ def OO_price_ratio_spot_od():
 		n_spot = 0
 		# print "failure rate = %f" % fail_rate
 		alpha_spot = (1-omega_savings_ratio) * alpha_v
+		# ratio.append(1.0-omega_savings_ratio)
+		
+		# print ratio
 		# results_price = []
 		quants = []
 		count += 1
@@ -803,13 +807,17 @@ def OO_price_ratio_spot_od():
 		# results_price.append(cost)
 		
 		results.append(cost)
+
+	# ratio.reverse()
 	filename = '../graphs/mg1_spot/OO_price_ratio_spot_OD' + str(fail_rate) + '_servers'  + '.png'
 	legends = ['OD cost', 'Spot cost', 'SC cost']
 	ylabel = 'Cost'
 	location = "upper right"
-	xlabel = r'$\alpha_{spot}/\alpha_v$'
+	# xlabel = r'$\alpha_v/\alpha_p$'
+	xlabel = '% savings of spot'
 	title = ""
 	plot_graph(filename, legends, omega_savings_percent, vm_cost, spot_cost, serv_cost, xlabel, ylabel, title, location)
+	# plot_graph(filename, legends, ratio, vm_cost.reverse(), spot_cost.reverse(), serv_cost.reverse(), xlabel, ylabel, title, location)
 
 # OO, vary spot/VM price ratio
 def OO_failure_rate_impact(val_lambda):
