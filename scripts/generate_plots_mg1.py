@@ -18,6 +18,76 @@ import math
 
 markers = ['s', 'h', '^', '*', 'o', 'p', '+', 'x', '<', 'D', '>', 'v', 'd', 0, 5, 2, 7, 1, 4, 3, 6, '1', '2', '3', '4', '8']
 
+def get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda):
+	Lv = beta * mu_v
+	Ls = ((alpha_v*mu_s)/(alpha_s*mu_v))*(mu_v + gamma) - gamma	
+	cost = 0
+	num_vm = 0
+	load_serv = 0
+	if Lv <= Ls or Ls < 0: 														# Serverless Always
+		cost = alpha_s*(val_lambda/mu_s)
+		load_serv = val_lambda
+	else:																		# Serverless until VM on-off
+		k = math.floor(val_lambda/Lv)
+		extra_lambda = val_lambda-(math.floor(val_lambda/Lv)*Lv)
+		if extra_lambda < Ls:	
+			# print "VM(%d On-Off) + SC" % k
+			Cv = alpha_v*((Lv*(mu_v + gamma))/((mu_v*(Lv + gamma))))*k
+			cost = Cv + (alpha_s*extra_lambda/mu_s)
+			load_serv = extra_lambda
+			num_vm = k
+		else:
+			# print "VM(%d On-Off)" % (k+1)
+			num_vm = k+1
+			Cv = alpha_v*((Lv*(mu_v + gamma))/((mu_v*(Lv + gamma))))*k
+			cost = Cv + (alpha_v*((extra_lambda*(mu_v + gamma))/((mu_v*(extra_lambda + gamma)))))
+	return num_vm, math.ceil(load_serv/mu_s), cost
+
+def plotMultUsers():
+	lambdas = [10,100]
+	delays = [0.2,0.8]
+	alpha_v = 1.0
+	# price_ratios = [0.01*x for x in range(100,1000)]
+	price_ratios = [x for x in range(1,10)]
+	mu_v = 10.0
+	mu_s = 12.0
+	beta = 0.9
+	gamma = 1.0
+	total_num_vm = 0
+	total_num_serv = 0
+	results_num_vm = []
+	results_num_serv = []
+	results_total_servers = []
+	for ratio in price_ratios:
+		alpha_s = alpha_v * ratio
+		total_num_vm = 0
+		total_num_serv = 0
+		for i in range(len(lambdas)):
+			val_lambda = lambdas[i]
+			new_mu_v, new_mu_s = mu_v/delays[i], mu_s/delays[i]
+			num_vm, num_serv, cost = get_config(beta, new_mu_s, new_mu_v, alpha_v, alpha_s, gamma, val_lambda)
+			total_num_vm += num_vm
+			total_num_serv += num_serv
+		results_num_vm.append(total_num_vm)
+		results_num_serv.append(total_num_serv)
+		results_total_servers.append(total_num_vm + total_num_serv)
+	filename = '../graphs/mg1/delaysTwoUsers'  + '.png'
+	fig = plt.figure()
+	legends = ['OD', 'SC']
+	# plt.plot(price_ratios[::200], results_num_vm[0][::200], 'c*', markersize=7)
+	# plt.plot(price_ratios[::200], results_num_serv[1][::200], 'ro', markersize=7)
+	# plt.plot(price_ratios[::200], results_total_servers[::200], 'g^', markersize=7)
+	plt.plot(price_ratios, results_num_vm, 'c', linewidth='2')
+	plt.plot(price_ratios, results_num_serv, 'r', linewidth='2')
+	# plt.plot(price_ratios, results_total_servers, 'g', linewidth='2')
+
+	plt.legend(legends, loc='upper right', fontsize=21)
+	plt.ylabel('Number of servers', fontsize=25)
+	# title = "Multiple VMs, different price ratios"
+	# fig.suptitle(title)
+	plt.xlabel(r'$\alpha_s/alpha_v$', fontsize=25)
+	plt.savefig(filename)
+
 def solve_quadratic_eq(a,b,c):
 	d = (b**2)-(4*a*c) # discriminant
 	# string = "a: " + str(a) + "\tb: " + str(b) + "\tc: " + str(c) + "\td: " + str(d)
@@ -267,6 +337,7 @@ def main():
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
 		print "<exp_type> : costserv_to_vm_ON/costserv_to_vm_ON_OFF"
 		print "<exp_type> : mus_to_muv_ON_OFF"
+		print "<exp_type> : plotMultUsers"
 		return
 	exp_type = sys.argv[1]
 	if exp_type == 'vary_startup_delay':
@@ -297,12 +368,15 @@ def main():
 		plotcostserv_to_vm_ON_OFF()
 	elif exp_type == 'mus_to_muv_ON_OFF':
 		plotmus_to_muv_ON_OFF()
+	elif exp_type == 'plotMultUsers':
+		plotMultUsers()
 	else:
 		print "Wrong <exp_type>"
 		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
 		print "<exp_type> : costserv_to_vm_ON/costserv_to_vm_ON_OFF"
 		print "<exp_type> : mus_to_muv_ON_OFF"
+		print "<exp_type> : plotMultUsers"
 
 if __name__ == '__main__':
 	main()
