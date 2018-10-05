@@ -44,20 +44,70 @@ def get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda):
 	return num_vm, load_serv, cost
 
 
-def getCPCost(num_vm, num_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v):
-	serv_cost = num_serv * cp_alpha_s / mu_s
+def getCPCost(num_vm, num_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta):
+	serv_cost = cp_alpha_s * (math.ceil((val_lambda / (beta*mu_s))) - num_vm)
+	# serv_cost = cp_alpha_s * ((val_lambda / (beta*mu_s)) - num_vm)
 	vm_cost = cp_alpha_v * num_vm
 	return serv_cost + vm_cost
+
+def plotSingleUserOptimalSC():
+	alpha_v = 1.0
+	price_ratios = [0.01*x for x in range(100,1000)]
+	# price_ratios = [0.1*x for x in range(10,100)]
+	mu_v = 10.0
+	mu_s = 10.0
+	cp_alpha_v = 0.375
+	cp_alpha_s = 0.25
+	beta = 0.9
+	gamma = 1.0
+	total_num_vm = 0
+	total_num_serv = 0
+	results = []
+	lambdas = [4, 6, 8]
+	for val_lambda in lambdas:
+		results_num_vm = []
+		results_num_serv = []
+		results_total_servers = []
+		results_cost = []
+		for ratio in price_ratios:
+			alpha_s = alpha_v * ratio		
+			num_vm, num_serv, user_cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+			cp_cost = getCPCost(num_vm, num_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)		
+			results_cost.append(user_cost - cp_cost)
+			# print num_vm, num_serv
+			# results_cost.append(user_cost)
+		results.append(results_cost)
+	filename = '../graphs/mg1/singleUserDelaysOptimalSC'  + '.png'
+	# filename = '../graphs/mg1/singleUserDelaysOptimalSCUser'  + '.png'
+	fig = plt.figure()
+	legends = []
+	for val_lambda in lambdas:
+		key = r'$\lambda$=' + str(val_lambda)
+		legends.append(key)
+	plt.plot(price_ratios[::200], results[0][::200], 'c*', markersize=7)
+	plt.plot(price_ratios[::200], results[1][::200], 'ro', markersize=7)
+	plt.plot(price_ratios[::200], results[2][::200], 'g^', markersize=7)
+	# plt.plot(lambdas[::200], results[3][::200], 'bs', markersize=7)
+	plt.plot(price_ratios, results[0], 'c', linewidth='2')
+	plt.plot(price_ratios, results[1], 'r', linewidth='2')
+	plt.plot(price_ratios, results[2], 'g', linewidth='2')
+	# plt.plot(lambdas, results[3], 'b', linewidth='2')
+
+	plt.legend(legends, loc='upper right', fontsize=21)
+	plt.ylabel('Cloud Provider Profit', fontsize=25)
+	# plt.ylabel('Revenue from User', fontsize=25)
+	plt.xlabel(r'$\alpha_s$', fontsize=25)
+	plt.savefig(filename)
 
 def plotSingleUser():
 	max_lambda = 24
 	lambdas = [.01*x for x in range(0,((max_lambda+1)*100))]
 	alpha_v = 1.0
 	price_ratios = [1,1.5,3,10]
-	cp_alpha_v = 1.0
-	cp_alpha_s = 1.0
+	cp_alpha_v = 0.25
+	cp_alpha_s = 0.0625
 	mu_v = 10.0
-	mu_s = 12.0
+	mu_s = 10.0
 	beta = 0.9
 	gamma = 1.0
 	total_num_vm = 0
@@ -72,13 +122,13 @@ def plotSingleUser():
 		for val_lambda in lambdas:
 			total_num_vm = 0
 			total_num_serv = 0
-			num_vm, num_serv, cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
-			cp_cost = getCPCost(num_vm, num_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v)
+			num_vm, num_serv, user_cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+			cp_cost = getCPCost(num_vm, num_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)
 			# print i, num_vm, num_serv
 			results_num_vm.append(total_num_vm)
 			results_num_serv.append(total_num_serv)
 			results_total_servers.append(total_num_vm + total_num_serv)		
-			results_cost.append(cost - cp_cost)
+			results_cost.append(user_cost - cp_cost)
 		results.append(results_cost)
 	filename = '../graphs/mg1/singleUserDelays'  + '.png'
 	fig = plt.figure()
@@ -96,7 +146,7 @@ def plotSingleUser():
 	plt.plot(lambdas, results[3], 'b', linewidth='2')
 
 	plt.legend(legends, loc='upper left', fontsize=21)
-	plt.ylabel('Profit', fontsize=25)
+	plt.ylabel('Cloud Provider Profit', fontsize=25)
 	plt.xlabel(r'$\lambda$', fontsize=25)
 	plt.savefig(filename)
 
@@ -395,7 +445,7 @@ def main():
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
 		print "<exp_type> : costserv_to_vm_ON/costserv_to_vm_ON_OFF"
 		print "<exp_type> : mus_to_muv_ON_OFF"
-		print "<exp_type> : plotMultUsers/plotSingleUser"
+		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC"
 		return
 	exp_type = sys.argv[1]
 	if exp_type == 'vary_startup_delay':
@@ -430,13 +480,15 @@ def main():
 		plotMultUsers()
 	elif exp_type == 'plotSingleUser':
 		plotSingleUser()
+	elif exp_type == 'plotSingleUserOptimalSC':
+		plotSingleUserOptimalSC()
 	else:
 		print "Wrong <exp_type>"
 		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
 		print "<exp_type> : costserv_to_vm_ON/costserv_to_vm_ON_OFF"
 		print "<exp_type> : mus_to_muv_ON_OFF"
-		print "<exp_type> : plotMultUsers/plotSingleUser"
+		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC"
 
 if __name__ == '__main__':
 	main()
