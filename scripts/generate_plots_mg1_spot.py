@@ -376,9 +376,91 @@ def get_num_load(load,num_inst, mu_inst, beta):
 		can_serve = count * beta * mu_inst
 		if load < can_serve:
 			return (count-1)*beta*mu_inst, load-((count-1)*beta*mu_inst),0
-	# return load,0,0
+	# return load,0,0 
 
-def calculate_vm_dist_cost(arrival_lambda, fail_rate, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma):
+# Calculate optimal configuration using a delay function
+def calculate_vm_dist_cost(arrival_lambda, delta, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma):
+	L_v = beta * mu_v
+	L_spot = beta * mu_spot
+
+	new_lambda_only_spots = arrival_lambda
+	num_spot_only_required = int(math.ceil(new_lambda_only_spots/L_spot))
+	actual_spots = min(num_spot_only_required+1,N_SPOT+1)
+	num_vm_only_required = int(math.ceil(arrival_lambda/L_v))
+
+	# if num_spot_only_required <= N_SPOT:
+	# 	# compare spot +serverless with OD + serverless
+	# 	min_num_spot, min_num_spot_serverless, min_spot_serv_cost, min_serv_cost, min_spot_cost = find_min_cost(new_lambda_only_spots, num_spot_only_required, alpha_spot, mu_spot, alpha_sl, mu_sl, beta, gamma)
+	# 	min_num_vm, min_num_vm_serverless, min_vm_serv_cost, min_servvm_cost, min_vm_cost = find_min_cost(arrival_lambda, num_vm_only_required, alpha_v, mu_v, alpha_sl, mu_sl, beta, gamma)
+	# 	serverless_only_cost = alpha_sl * arrival_lambda / mu_sl
+	# 	if min_vm_serv_cost <= min_spot_serv_cost:					# OD + serverless is cheaper than spot + serverless
+	# 		if serverless_only_cost <= min_vm_serv_cost:
+	# 			return 0,0,arrival_lambda, serverless_only_cost, serverless_only_cost, 0, 0
+	# 		else:
+	# 			return 0,min_num_vm, min_num_vm_serverless, min_vm_serv_cost, min_servvm_cost, 0, min_vm_cost
+	# 	else:
+	# 		if serverless_only_cost <= min_spot_serv_cost:
+	# 			return 0,0,arrival_lambda, serverless_only_cost, serverless_only_cost, 0, 0
+	# 		else:
+	# 			return min_num_spot, 0, min_num_spot_serverless, min_spot_serv_cost, min_serv_cost, min_spot_cost, 0
+
+	num_vm = 0
+	num_spot = 0
+	num_serv = 0
+	min_cost = 999999.0
+
+	v,s = 0,0
+	for v in range(0, num_vm_only_required+1):
+		for s in range(0, actual_spots):
+			val_lambda = arrival_lambda
+			spot_load = 0
+			serv_load = 0
+			if s != 0:
+				# val_lambda = calc_lambda(arrival_lambda, fail_rate, v, s)
+				spot_load = ((delta*float(s))/(float(v)+(delta*float(s))))*val_lambda 			
+			vm_load = val_lambda - spot_load							
+			spot_load_full,spot_load_part,excess_spot = get_num_load(spot_load, s, mu_spot, beta)
+			# OPTION 1: putting excess load of spot and VM on serverless
+			# vm_load_full,vm_load_part,excess_vm = get_num_load(vm_load, v, mu_v, beta)
+			# serv_load = excess_spot + excess_vm		
+			# OPTION 2: put excess load of spot on VM, then excess load of VM on serverless
+			vm_load_full,vm_load_part,excess_vm = get_num_load(vm_load+excess_spot, v, mu_v, beta)
+			serv_load = excess_vm
+			if v != 0:
+				vm_cost = inst_cost(vm_load_full, vm_load_full/(beta*mu_v), alpha_v, mu_v, beta, gamma) + \
+							inst_cost(vm_load_part, 1.0, alpha_v, mu_v, beta, gamma)
+				# vm_cost = inst_cost(vm_load_full, v, alpha_v, mu_v, beta, gamma)
+			else:
+				vm_cost = 0
+			if s != 0:
+				spot_cost = inst_cost(spot_load_full, spot_load_full/(beta*mu_spot), alpha_spot, mu_spot, beta, gamma) + \
+								inst_cost(spot_load_part, 1.0, alpha_spot, mu_spot, beta, gamma)
+				# spot_cost = inst_cost(spot_load_full, s, alpha_spot, mu_spot, beta, gamma)
+			else:
+				spot_cost = 0
+			serv_cost = alpha_sl * serv_load / mu_sl
+			if v > 0 and vm_load_full + vm_load_part <= (v-1)*beta*mu_v:
+				continue
+			if s > 0 and spot_load_full + spot_load_part <= (s-1)*beta*mu_spot:
+				continue
+			# if fail_rate == 0.4:
+			# 	print "v=%f\ts=%f\tval_lam=%f\tv_f=%f\tv_p=%f\ts_f=%f\ts_p=%f\tsl=%f\tcost=%f\tmin_cost=%f\t" % \
+			# 		 (v,s,val_lambda,vm_load_full, vm_load_part,spot_load_full,spot_load_part, serv_load,serv_cost + spot_cost + vm_cost,min_cost)
+			
+			if min_cost > serv_cost + spot_cost + vm_cost:
+				min_cost = serv_cost + spot_cost + vm_cost
+				min_serv_cost = serv_cost
+				min_spot_cost = spot_cost
+				min_vm_cost = vm_cost
+				num_vm = v
+				num_spot = s
+				num_serv = serv_load
+			# if vm_load <= v*L_v:
+			# 	break
+	return num_spot, num_vm, num_serv, min_cost, min_serv_cost, min_spot_cost, min_vm_cost
+
+# Calculate optimal configuration using a failure rate
+def calculate_vm_dist_cost_fail_rate(arrival_lambda, fail_rate, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma):
 	L_v = beta * mu_v
 	L_spot = beta * mu_spot
 
@@ -458,93 +540,6 @@ def calculate_vm_dist_cost(arrival_lambda, fail_rate, mu_spot, mu_v, mu_sl, N_SP
 			# 	break
 	return num_spot, num_vm, num_serv, min_cost, min_serv_cost, min_spot_cost, min_vm_cost
 
-def calculate_vm_dist_cost_old(arrival_lambda, fail_rate, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma):
-	L_v = beta * mu_v
-	L_spot = beta * mu_spot
-
-	new_lambda_only_spots = arrival_lambda/(1-fail_rate)
-	num_spot_only_required = math.ceil(new_lambda_only_spots/L_spot)
-	num_vm_only_required = math.ceil(arrival_lambda/L_v)
-
-	if num_spot_only_required <= N_SPOT:
-		# compare spot +serverless with OD + serverless
-		min_num_spot, min_num_spot_serverless, min_spot_serv_cost = find_min_cost(new_lambda_only_spots, num_spot_only_required, alpha_spot, mu_spot, alpha_sl, mu_sl, beta, gamma)
-		min_num_vm, min_num_vm_serverless, min_vm_serv_cost = find_min_cost(arrival_lambda, num_vm_only_required, alpha_v, mu_v, alpha_sl, mu_sl, beta, gamma)
-		serverless_only_cost = alpha_sl * arrival_lambda / mu_sl
-		if min_vm_serv_cost <= min_spot_serv_cost:					# OD + serverless is cheaper than spot + serverless
-			if serverless_only_cost <= min_vm_serv_cost:
-				return 0,0,arrival_lambda, serverless_only_cost
-			else:
-				return 0,min_num_vm, min_num_vm_serverless, min_vm_serv_cost
-		else:
-			if serverless_only_cost <= min_spot_serv_cost:
-				return 0,0,arrival_lambda, serverless_only_cost
-			else:
-				return min_num_spot, 0, min_num_spot_serverless, min_spot_serv_cost
-	else:												# Mix of spot, vm, serverless
-		# return 0,0,0,0
-		if fail_rate == 0.4:
-			print "hello"
-		num_vm = 0.0
-		prev_cost = 99999999.0		
-		min_cost = 9999999.0
-		prev_serv_load = 0		
-		# if fail_rate == 0.4:
-		# 	print "prev_cost = %f\tmin_cost=%f" % (prev_cost,min_cost)
-		while True:
-			serv_load = 0
-			
-			new_lambda = calc_lambda(arrival_lambda, fail_rate, num_vm, N_SPOT)
-			if fail_rate == 0.4:
-				print "prev_cost = %f\tmin_cost=%f\tarrival_lambda=%f" % (prev_cost,min_cost,arrival_lambda)
-			spot_load = (N_SPOT/(N_SPOT+num_vm))*new_lambda # Split this into Max_Spot + serverless
-			vm_load = new_lambda - spot_load			# How to optimally split VM load into VM and serverless
-			max_spot_load = L_spot* N_SPOT
-			max_vm_load = L_v * num_vm
-			# OPTION 1: Max_spot + serv + VM (putting excess load of spot on serverless)
-			if vm_load > max_vm_load:
-				serv_load = vm_load - max_vm_load
-				vm_load = max_vm_load
-			if spot_load > max_spot_load:
-				serv_load += spot_load - max_spot_load
-				spot_load = max_spot_load
-			if fail_rate == 0.4:
-				print "new_load=%f\tarrival_load=%f\tnum_vm=%f\tServ_load=%f\tvm_load=%f\tspot_load=%f\t" % \
-					(new_lambda, arrival_lambda,num_vm, serv_load, vm_load, spot_load)
-
-			spot_cost = inst_cost(spot_load, N_SPOT, alpha_spot, mu_spot, beta, gamma) 	# compute Spot cost
-			vm_cost = inst_cost(vm_load, num_vm, alpha_v, mu_v, beta, gamma) 		# compute VM cost
-			serv_cost = alpha_sl * serv_load / mu_sl 						# compute serv cost
-			new_cost = spot_cost + vm_cost + serv_cost
-			if fail_rate == 0.4:
-				print "spot_cost=%f\tvm_cost=%f\tserv_cost=%f\tmin_cost=%f\tnew_cost=%f" % \
-						(spot_cost,vm_cost,serv_cost,min_cost,new_cost)
-			if min_cost > new_cost:
-				print "here"
-				min_cost = new_cost
-				num_vm += 1
-				prev_serv_load = serv_load
-			else:
-				return N_SPOT, num_vm, prev_serv_load, min_cost
-			
-			# OPTION 2: Max_spot + serv + VM (putting excess load of spot on VM)			
-			# if spot_load > max_spot_load:
-			# 	vm_load += spot_load - max_spot_load
-			# 	spot_load = max_spot_load
-			# if vm_load > max_vm_load:
-			# 	serv_load = vm_load - max_vm_load
-			# 	vm_load = max_vm_load
-			# spot_cost = inst_cost(spot_load, N_SPOT, alpha_spot, mu_spot, beta, gamma) 	# compute Spot cost
-			# vm_cost = inst_cost(vm_load, num_vm, alpha_v, mu_v, beta, gamma) 		# compute VM cost
-			# serv_cost = alpha_sl * serv_load / mu_sl 						# compute serv cost
-			# new_cost = spot_cost + vm_cost + serv_cost
-			# if min_cost < new_cost:
-			# 	min_cost = new_cost
-			# 	num_vm += 1
-			# 	continue
-			# else:
-			# 	return N_SPOT, num_vm, serv_load, min_cost
-
 def calc_lambda(arrival_lambda, f, num_vm, num_spot):
 	# if f == 0.4:
 		# print arrival_lambda, f, num_vm, num_spot
@@ -556,7 +551,7 @@ def OO_vary_failure_rate():
 	lambdas = [.01*x for x in range(1,((max_lambda+1)*100))]
 
 	# Number of spot VMs:
-	N_SPOT = 3
+	N_SPOT = 10
 	# Max capacity of VM allowed:
 	beta = 0.9 		
 	# startup delay
@@ -574,7 +569,7 @@ def OO_vary_failure_rate():
 	# Service rates
 	mu_v = 8.0
 	mu_sl = 10.0
-	delta = 0.8
+	delta = 0.8			# TODO: replace this by a function of alpha_spot
 	mu_spot = delta*mu_v
 
 	# Current Number of VMs:
