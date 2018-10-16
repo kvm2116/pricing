@@ -47,6 +47,34 @@ def get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda):
 	return num_vm, load_serv, cost
 
 
+
+def get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda):
+	Ls = (alpha_v/alpha_s)*mu_s
+	Lv = beta*mu_v
+	# print "Ls = %d\tLv = %d" % (Ls, Lv)
+	cost = 0
+	num_vm = 0
+	load_serv = 0
+	if Lv <= Ls: 
+		load_serv = val_lambda
+		cost = alpha_s*(val_lambda/mu_s)
+	else:
+		k = math.floor(val_lambda/Lv)
+		# print k
+		if val_lambda-(math.floor(val_lambda/Lv)*Lv) < Ls:	
+			num_vm = k
+			load_serv = val_lambda-(math.floor(val_lambda/Lv)*Lv)
+			# print "V+S"
+		else:
+			num_vm = k+1
+			load_serv = 0
+			# print "V"
+		Cv = alpha_v*num_vm
+		Cs = alpha_s*(load_serv/mu_s)
+		cost = Cv + Cs
+	return num_vm, load_serv, cost
+
+
 def getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta):
 	# serv_cost = cp_alpha_s * (math.ceil((val_lambda / (beta*mu_s))) - num_vm)
 	serv_cost = cp_alpha_s * math.ceil(load_serv / mu_s) 
@@ -221,7 +249,7 @@ def getNumServers(num_vm, load_serv, mu_v, mu_s, mu_server, eff_v, eff_s):
 
 
 
-def plotSingleUserEfficiency():
+def plotSingleUserEfficiency(mode):
 	alpha_v = 1.0
 	price_ratios = [0.01*x for x in range(100,600)]
 	mu_server = 30.0
@@ -236,7 +264,7 @@ def plotSingleUserEfficiency():
 	total_num_vm = 0
 	total_num_serv = 0
 	results = []
-	lambdas = [4, 20, 40]
+	lambdas = [4, 20, 100]
 	num_servers = []
 	# lambdas = [20, 60, 100]
 	# lambdas = [100]
@@ -246,16 +274,21 @@ def plotSingleUserEfficiency():
 		results_total_servers = []
 		results_cost = []
 		for ratio in price_ratios:
-			alpha_s = alpha_v * ratio		
-			num_vm, load_serv, revenue = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+			alpha_s = alpha_v * ratio
+			num_vm, load_serv, revenue = 0,0,0
+			if mode == 'OO':		
+				num_vm, load_serv, revenue = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+			elif mode == 'AO':
+				num_vm, load_serv, revenue = get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+				print "here"
 			cp_cost = getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)		
 			results_cost.append(revenue - cp_cost)
 			results_total_servers.append(getNumServers(num_vm, load_serv, mu_v, mu_s, mu_server, eff_v, eff_s))
-			print num_vm, load_serv
+			# print num_vm, load_serv
 			# results_cost.append(cp_cost)
 		results.append(results_cost)
 		num_servers.append(results_total_servers)
-	filename = '../graphs/mg1/singleUserEfficiency'  + '.png'
+	filename = '../graphs/mg1/singleUserEfficiency' + mode + '.png'
 	# filename = '../graphs/mg1/singleUserDelaysOptimalSCUser'  + '.png'
 	fig = plt.figure()
 	legends = []
@@ -320,7 +353,7 @@ def plotSingleUserEfficiency():
 
 	plt.savefig(filename)
 
-def plotSingleUserUniformDist():
+def plotSingleUserUniformDist(mode):
 	max_lambda = 10000
 	lambdas = [.01*x for x in range(0,((max_lambda+1)*100))]
 	alpha_v = 1.0
@@ -348,7 +381,12 @@ def plotSingleUserUniformDist():
 		for val_lambda in lambdas:
 			total_num_vm = 0
 			total_num_serv = 0
-			num_vm, num_serv, user_cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+			num_vm, load_serv, revenue = 0,0,0
+			if mode == 'OO':		
+				num_vm, load_serv, revenue = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+			elif mode == 'AO':
+				num_vm, load_serv, revenue = get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+			# num_vm, num_serv, user_cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
 			cp_cost = getCPCost(num_vm, num_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)
 			# print i, num_vm, num_serv
 			results_num_vm.append(total_num_vm)
@@ -358,7 +396,7 @@ def plotSingleUserUniformDist():
 			profit += user_cost - cp_cost
 		results.append(results_cost)
 		total_profit.append(profit)
-	filename = '../graphs/mg1/UniformDist'  + '.png'
+	filename = '../graphs/mg1/UniformDist' + mode + '.png'
 	fig = plt.figure()
 	# legends = []
 	# for ratio in price_ratios:
@@ -723,7 +761,7 @@ def plotmus_to_muv_ON_OFF():
 
 
 def main():
-	if len(sys.argv) != 2:
+	if len(sys.argv) >  3:
 		print "USAGE: python generate_plots_mg1.py <exp_type>"
 		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
@@ -765,9 +803,9 @@ def main():
 	elif exp_type == 'plotSingleUser':
 		plotSingleUser()
 	elif exp_type == 'plotSingleUserUniformDist':
-		plotSingleUserUniformDist()
+		plotSingleUserUniformDist(sys.argv[2])
 	elif exp_type == 'plotSingleUserEfficiency':
-		plotSingleUserEfficiency()
+		plotSingleUserEfficiency(sys.argv[2])
 	elif exp_type == 'plotSingleUserOptimalSC':
 		plotSingleUserOptimalSC()
 	elif exp_type == 'plotSingleUserOptimalSCvaryDelay':
