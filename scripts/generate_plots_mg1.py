@@ -251,24 +251,27 @@ def getNumServers(num_vm, load_serv, mu_v, mu_s, mu_server, eff_v, eff_s):
 
 def plotSingleUserEfficiency(mode):
 	alpha_v = 1.0
-	price_ratios = [0.01*x for x in range(100,600)]
+	price_ratios = [0.01*x for x in range(100,500)]
 	mu_server = 30.0
 	mu_v = 5.0
 	mu_s = 10.0
 	eff_s = 5.0
 	eff_v = 10.0
 	cp_alpha_v = 0.2
-	cp_alpha_s = 0.3
+	# cp_alpha_s = 0.3
+	cp_cost_ratios = [0.5, 1, 1.5]
 	beta = 0.9
 	gamma = 1
 	total_num_vm = 0
 	total_num_serv = 0
 	results = []
-	lambdas = [4, 20, 100]
+	lambdas = [4, 20, 40]
 	num_servers = []
 	# lambdas = [20, 60, 100]
 	# lambdas = [100]
-	for val_lambda in lambdas:
+	for cp_ratio in cp_cost_ratios:
+		val_lambda = 40
+		cp_alpha_s = cp_ratio * cp_alpha_v
 		results_num_vm = []
 		results_num_serv = []
 		results_total_servers = []
@@ -292,8 +295,11 @@ def plotSingleUserEfficiency(mode):
 	# filename = '../graphs/mg1/singleUserDelaysOptimalSCUser'  + '.png'
 	fig = plt.figure()
 	legends = []
-	for val_lambda in lambdas:
-		key = r'$\lambda$=' + str(val_lambda)
+	# for val_lambda in lambdas:
+	# 	key = r'$\lambda$=' + str(val_lambda)
+	# 	legends.append(key)
+	for ratio in cp_cost_ratios:
+		key = r'$\alpha_{s\_cp}$=' + str(ratio) + r'$\alpha_{v\_cp}$'
 		legends.append(key)
 	plt.plot(price_ratios[::100], results[0][::100], 'c*', markersize=7)
 	plt.plot(price_ratios[::100], results[1][::100], 'ro', markersize=7)
@@ -305,7 +311,9 @@ def plotSingleUserEfficiency(mode):
 	# plt.plot(lambdas, results[3], 'b', linewidth='2')
 
 	plt.legend(legends, loc='upper right', fontsize=21)
-	plt.ylabel('Cloud Provider Profit', fontsize=25)
+	labelstr = 'Cloud Provider Profit for ' + r'$\lambda$' + ' = 40'
+	# plt.ylabel('Cloud Provider Profit', fontsize=25)
+	plt.ylabel(labelstr, fontsize=25)
 	# plt.ylabel('Revenue from User', fontsize=25)
 	plt.xlabel(r'$\alpha_s$', fontsize=25)
 	plt.savefig(filename)
