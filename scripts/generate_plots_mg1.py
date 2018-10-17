@@ -357,61 +357,67 @@ def plotSingleUserUniformDist(mode):
 	max_lambda = 10000
 	lambdas = [.01*x for x in range(0,((max_lambda+1)*100))]
 	alpha_v = 1.0
-	price_ratios = [.1*x for x in range(10,100)]
+	price_ratios = [.1*x for x in range(10,60)]
+	cp_cost_ratios = [0.5, 1, 1.5]
 	mu_server = 30.0
 	mu_v = 5.0
 	mu_s = 10.0
 	eff_s = 5.0
 	eff_v = 10.0
 	cp_alpha_v = 0.2
-	cp_alpha_s = 0.3
+	# cp_alpha_s = 0.3
 	beta = 0.9
 	gamma = 1
 	total_num_vm = 0
 	total_num_serv = 0
 	results = []
 	total_profit = []
-	for ratio in price_ratios:
-		alpha_s = alpha_v * ratio
-		results_num_vm = []
-		results_num_serv = []
-		results_total_servers = []
-		results_cost = []
-		profit = 0
-		for val_lambda in lambdas:
-			total_num_vm = 0
-			total_num_serv = 0
-			num_vm, load_serv, revenue = 0,0,0
-			if mode == 'OO':		
-				num_vm, load_serv, revenue = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
-			elif mode == 'AO':
-				num_vm, load_serv, revenue = get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
-			# num_vm, num_serv, user_cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
-			cp_cost = getCPCost(num_vm, num_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)
-			# print i, num_vm, num_serv
-			results_num_vm.append(total_num_vm)
-			results_num_serv.append(total_num_serv)
-			results_total_servers.append(total_num_vm + total_num_serv)		
-			results_cost.append(user_cost - cp_cost)
-			profit += user_cost - cp_cost
-		results.append(results_cost)
-		total_profit.append(profit)
+	profits = []
+	for cp_ratio in cp_cost_ratios:
+		cp_alpha_s = cp_alpha_v * cp_ratio
+		total_profit = [] 
+		for ratio in price_ratios:
+			alpha_s = alpha_v * ratio
+			results_num_vm = []
+			results_num_serv = []
+			results_total_servers = []
+			results_cost = []
+			profit = 0
+			for val_lambda in lambdas:
+				total_num_vm = 0
+				total_num_serv = 0
+				num_vm, load_serv, revenue = 0,0,0
+				if mode == 'OO':		
+					num_vm, load_serv, revenue = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+				elif mode == 'AO':
+					num_vm, load_serv, revenue = get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+				# num_vm, num_serv, user_cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+				cp_cost = getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)
+				# print i, num_vm, num_serv
+				results_num_vm.append(total_num_vm)
+				results_num_serv.append(total_num_serv)
+				results_total_servers.append(total_num_vm + total_num_serv)		
+				results_cost.append(revenue - cp_cost)
+				profit += revenue - cp_cost
+			results.append(results_cost)
+			total_profit.append(profit)
+		profits.append(total_profit)
 	filename = '../graphs/mg1/UniformDist' + mode + '.png'
 	fig = plt.figure()
-	# legends = []
-	# for ratio in price_ratios:
-	# 	key = r'$\alpha_s$=' + str(ratio) + r'$\alpha_v$'
-	# 	legends.append(key)
-	plt.plot(price_ratios[::10], total_profit[::10], 'c*', markersize=7)
-	# plt.plot(lambdas[::200], results[1][::200], 'ro', markersize=7)
-	# plt.plot(lambdas[::200], results[2][::200], 'g^', markersize=7)
-	# plt.plot(lambdas[::200], results[3][::200], 'bs', markersize=7)
-	plt.plot(price_ratios, total_profit, 'c', linewidth='2')
-	# plt.plot(lambdas, results[1], 'r', linewidth='2')
-	# plt.plot(lambdas, results[2], 'g', linewidth='2')
-	# plt.plot(lambdas, results[3], 'b', linewidth='2')
+	legends = []
+	for ratio in cp_cost_ratios:
+		key = r'$\alpha_{s\_cp}$=' + str(ratio) + r'$\alpha_{v\_cp}$'
+		legends.append(key)
+	plt.plot(price_ratios[::10], profits[0][::10], 'c*', markersize=7)
+	plt.plot(price_ratios[::10], profits[1][::10], 'ro', markersize=7)
+	plt.plot(price_ratios[::10], profits[2][::10], 'g^', markersize=7)
+	# plt.plot(price_ratios[::10], profits[3][::10], 'bs', markersize=7)
+	plt.plot(price_ratios, profits[0], 'c', linewidth='2')
+	plt.plot(price_ratios, profits[1], 'r', linewidth='2')
+	plt.plot(price_ratios, profits[2], 'g', linewidth='2')
+	# plt.plot(price_ratios, profits[3], 'b', linewidth='2')
 
-	# plt.legend(legends, loc='upper left', fontsize=21)
+	plt.legend(legends, loc='upper right', fontsize=21)
 	plt.ylabel('Cloud Provider Profit', fontsize=25)
 	plt.xlabel(r'$\alpha_s$', fontsize=25)
 	plt.savefig(filename)
