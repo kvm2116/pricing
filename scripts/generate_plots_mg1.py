@@ -458,6 +458,91 @@ def plotSingleUserEfficiency(mode):
 
 	plt.savefig(filename)
 
+def plotSingleUserDistVaryMu(mode, dist):
+	max_lambda = 10000
+	lambdas = [x for x in range(1, max_lambda)]
+	alpha_v = 1.0
+	price_ratios = [.01*x for x in range(100,500)]
+	cp_cost_ratios = [0.5, 1, 1.5]
+	mu_server = 30.0
+	mu_v = 5.0
+	# mu_s = 10.0
+	mu_s_ratios = [0.01*x for x in range(100,300)]
+	eff_s = 5.0
+	eff_v = 10.0
+	cp_alpha_v = 0.2
+	# cp_alpha_s = 0.3
+	beta = 0.9
+	gamma = 1
+	total_num_vm = 0
+	total_num_serv = 0
+	results = []
+	total_profit = []
+	profits = []
+	optimal_a_s = []
+	for cp_ratio in cp_cost_ratios:
+		print cp_ratio
+		cp_alpha_s = cp_alpha_v * cp_ratio
+		total_profit = [] 
+		for mu_ratio in mu_s_ratios:
+			mu_s = mu_ratio * mu_v
+			max_profit = -10000000000000000
+			optimal_alpha_s = -1
+			# config = 0
+			for ratio in price_ratios:
+				alpha_s = alpha_v * ratio
+				results_num_vm = []
+				results_num_serv = []
+				results_total_servers = []
+				results_cost = []
+				profit = 0
+				for val_lambda in lambdas:
+					total_num_vm = 0
+					total_num_serv = 0
+					num_vm, load_serv, revenue = 0,0,0
+					if mode == 'OO':		
+						num_vm, load_serv, revenue = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+					elif mode == 'AO':
+						num_vm, load_serv, revenue = get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+					# num_vm, num_serv, user_cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+					cp_cost = getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)
+					# print i, num_vm, num_serv
+					results_num_vm.append(total_num_vm)
+					results_num_serv.append(total_num_serv)
+					results_total_servers.append(total_num_vm + total_num_serv)		
+					results_cost.append(revenue - cp_cost)
+					if dist == 'Uniform':
+						profit += ((1.0/max_lambda)*(revenue - cp_cost))
+					elif dist == 'Zipf':
+						profit += (((1.0/val_lambda)*(revenue - cp_cost))/9.787)
+				if profit > max_profit:
+					max_profit = profit
+					optimal_alpha_s = alpha_s
+			total_profit.append(max_profit)
+			optimal_a_s.append(optimal_alpha_s)
+		results.append(optimal_a_s)
+	filename = '../graphs/mg1/' + dist + 'Dist' + mode + 'VaryMu.png'
+	fig = plt.figure()
+	legends = []
+	for ratio in cp_cost_ratios:
+		key = r'$\alpha_{s\_cp}$=' + str(ratio) + r'$\alpha_{v\_cp}$'
+		legends.append(key)
+	plt.plot(mu_s_ratios[::10], results[0][::10], 'c*', markersize=7)
+	plt.plot(mu_s_ratios[::10], results[1][::10], 'ro', markersize=7)
+	plt.plot(mu_s_ratios[::10], results[2][::10], 'g^', markersize=7)
+	# plt.plot(price_ratios[::10], profits[3][::10], 'bs', markersize=7)
+	plt.plot(mu_s_ratios, results[0], 'c', linewidth='2')
+	plt.plot(mu_s_ratios, results[1], 'r', linewidth='2')
+	plt.plot(mu_s_ratios, results[2], 'g', linewidth='2')
+	# plt.plot(price_ratios, profits[3], 'b', linewidth='2')
+
+	plt.legend(legends, loc='upper right', fontsize=21)
+	labelstr = 'Optimal ' + r'$\alpha_s$'
+	plt.ylabel(labelstr, fontsize=25)
+	plt.xlabel(r'$\mu_s/\mu_v$', fontsize=20)
+	plt.savefig(filename)
+
+
 def plotSingleUserDist(mode, dist):
 	max_lambda = 10000
 	lambdas = [x for x in range(1, max_lambda)]
@@ -505,9 +590,9 @@ def plotSingleUserDist(mode, dist):
 				results_total_servers.append(total_num_vm + total_num_serv)		
 				results_cost.append(revenue - cp_cost)
 				if dist == 'Uniform':
-					profit += revenue - cp_cost
+					profit += ((1.0/max_lambda)*(revenue - cp_cost))
 				elif dist == 'Zipf':
-					profit += (1/val_lambda)*(revenue - cp_cost)
+					profit += (((1.0/val_lambda)*(revenue - cp_cost))/9.787)
 			results.append(results_cost)
 			total_profit.append(profit)
 		profits.append(total_profit)
@@ -882,7 +967,7 @@ def main():
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
 		print "<exp_type> : costserv_to_vm_ON/costserv_to_vm_ON_OFF"
 		print "<exp_type> : mus_to_muv_ON_OFF"
-		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC/plotSingleUserOptimalSCvaryDelay/plotSingleUserEfficiency/plotSingleUserDist/plotSingleUserEfficiencyVaryMu"
+		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC/plotSingleUserOptimalSCvaryDelay/plotSingleUserEfficiency/plotSingleUserDist/plotSingleUserEfficiencyVaryMu/plotSingleUserDistVaryMu"
 		return
 	exp_type = sys.argv[1]
 	if exp_type == 'vary_startup_delay':
@@ -921,6 +1006,8 @@ def main():
 		plotSingleUserEfficiencyVaryMu()
 	elif exp_type == 'plotSingleUserDist':
 		plotSingleUserDist(sys.argv[2], sys.argv[3])
+	elif exp_type == 'plotSingleUserDistVaryMu':
+		plotSingleUserDistVaryMu(sys.argv[2], sys.argv[3])
 	elif exp_type == 'plotSingleUserEfficiency':
 		plotSingleUserEfficiency(sys.argv[2])
 	elif exp_type == 'plotSingleUserOptimalSC':
@@ -935,7 +1022,7 @@ def main():
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
 		print "<exp_type> : costserv_to_vm_ON/costserv_to_vm_ON_OFF"
 		print "<exp_type> : mus_to_muv_ON_OFF"
-		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC/plotSingleUserOptimalSCvaryDelay/plotSingleUserEfficiency/plotSingleUserDist/plotSingleUserEfficiencyVaryMu"
+		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC/plotSingleUserOptimalSCvaryDelay/plotSingleUserEfficiency/plotSingleUserDist/plotSingleUserEfficiencyVaryMu/plotSingleUserDistVaryMu"
 
 if __name__ == '__main__':
 	main()
