@@ -564,12 +564,14 @@ def OO_vary_failure_rate():
 	alpha_sl = 2.5*alpha_v	
 
 	# Failure rate
-	failure_rates = [0.1,0.2,0.4]
+	# failure_rates = [0.1,0.2,0.4]
 	# failure_rates = [0.1,0.1,0.1,0.1]
 	# Service rates
 	mu_v = 8.0
 	mu_sl = 10.0
-	delta = 0.8			# TODO: replace this by a function of alpha_spot
+	# delta = 0.8			# TODO: replace this by a function of alpha_spot
+	delta = (alpha_spot ** 2)/(alpha_v **2)		# Convex function
+	# delta = (-(alpha_spot**2) + (2*alpha_spot*alpha_v))/(alpha_v**2)		# Concave function
 	mu_spot = delta*mu_v
 
 	# Current Number of VMs:
@@ -588,36 +590,37 @@ def OO_vary_failure_rate():
 
 	# prev_transition_cost = n_spot * alpha_spot
 	count = 0
-	for fail_rate in failure_rates:
-		n_spot = 0
-		print "failure rate = %f" % fail_rate
-		results_price = []
-		quants = []
-		count += 1
+	# for fail_rate in failure_rates:
+	# 	n_spot = 0
+	# 	print "failure rate = %f" % fail_rate
+	results_price = []
+	# 	quants = []
+	# 	count += 1
 		
-		for val_lambda in lambdas:
- 			num_spot, num_vm, num_serverless, cost = calculate_vm_dist_cost(val_lambda, fail_rate, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma)
- 			if count == 1:
- 				print "Spot = %f\tOD = %f\tServ = %fval_lambda=%f\n\n" % (num_spot, num_vm, num_serverless,val_lambda)
-			results_price.append(cost)
-		
-		results.append(results_price)
+	for val_lambda in lambdas:
+		num_spot, num_vm, num_serverless, cost = calculate_vm_dist_cost(val_lambda, delta, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma)
+		# if count == 1:
+		# 	print "Spot = %f\tOD = %f\tServ = %fval_lambda=%f\n\n" % (num_spot, num_vm, num_serverless,val_lambda)
+		# results_price.append(cost)
+		results_price.append(cost)
+			
+	results.append(results_price)
 	filename = '../graphs/mg1_spot/OO_vary_failure_rate'  + '.png'
 	fig = plt.figure()
 	legends = []
-	for rate in failure_rates:
-		key = 'f = ' + str(rate)
-		legends.append(key)
+	# for rate in failure_rates:
+	# 	key = 'f = ' + str(rate)
+	# 	legends.append(key)
 	plt.plot(lambdas[::100], results[0][::100], 'c*', markersize=7)
-	plt.plot(lambdas[::100], results[1][::100], 'ro', markersize=7)
-	plt.plot(lambdas[::100], results[2][::100], 'g^', markersize=7)
+	# plt.plot(lambdas[::100], results[1][::100], 'ro', markersize=7)
+	# plt.plot(lambdas[::100], results[2][::100], 'g^', markersize=7)
 	# plt.plot(lambdas[::100], results[3][::100], 'bs', markersize=7)
 	plt.plot(lambdas, results[0], 'c', linewidth='2')
-	plt.plot(lambdas, results[1], 'r', linewidth='2')
-	plt.plot(lambdas, results[2], 'g', linewidth='2')
+	# plt.plot(lambdas, results[1], 'r', linewidth='2')
+	# plt.plot(lambdas, results[2], 'g', linewidth='2')
 	# plt.plot(lambdas, results[3], 'b', linewidth='2')
 
-	plt.legend(legends, loc='upper left', fontsize=21)
+	# plt.legend(legends, loc='upper left', fontsize=21)
 	plt.ylabel('Cost', fontsize=25)
 	# title = "Multiple VMs, different price ratios"
 	# fig.suptitle(title)

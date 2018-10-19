@@ -245,6 +245,110 @@ def getNumServers(num_vm, load_serv, mu_v, mu_s, mu_server, eff_v, eff_s):
 	num_servers_for_serv_load = math.ceil(load_serv/mu_s)/sc_per_server
 	return math.ceil(num_servers_for_serv_load + num_servers_for_vm_load)
 
+# 1: SC only, 2 : Hybrid, 3: VM only
+def plotSingleUserEfficiencyVarySCcost():
+	alpha_v = 1.0
+	price_ratios = [0.01*x for x in range(100,400)]
+	mu_server = 30.0
+	mu_v = 5.0
+	mu_s_ratios = [0.01*x for x in range(100,300)]
+	# mu_s = 10.0
+	eff_s = 5.0
+	eff_v = 10.0
+	cp_alpha_v = 0.2
+	# cp_alpha_s = 0.3
+	cp_cost_ratios = [0.5, 1.2, 1.5, 2.1]
+	beta = 0.9
+	gamma = 1
+	total_num_vm = 0
+	total_num_serv = 0
+	results = []
+	configs = []
+	# lambdas = [4, 20, 55]
+	val_lambda = 55
+	num_servers = []
+	# lambdas = [20, 60, 100]
+	# lambdas = [100]
+
+	for cp_ratio in cp_cost_ratios:
+		cp_alpha_s = cp_ratio * cp_alpha_v
+		results_config = []
+		results_total_servers = []
+		results_cost = []
+		results_opt_alpha_s = []
+		for mu_s_ratio in mu_s_ratios:
+			mu_s = mu_s_ratio * mu_v
+			max_profit = -10000000000000000
+			optimal_alpha_s = -1
+			config = 0
+			for ratio in price_ratios:
+				alpha_s = alpha_v * ratio
+				num_vm, load_serv, revenue = 0,0,0
+				num_vm, load_serv, revenue = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+				cp_cost = getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)		
+				if revenue - cp_cost > max_profit:
+					max_profit = revenue - cp_cost
+					optimal_alpha_s = ratio
+					if num_vm == 0:
+						config = 1
+					elif load_serv > 0:
+						config = 2
+					else:
+						config = 3
+			results_cost.append(max_profit)
+			results_config.append(config)
+			results_opt_alpha_s.append(optimal_alpha_s)
+				# results_total_servers.append(getNumServers(num_vm, load_serv, mu_v, mu_s, mu_server, eff_v, eff_s))
+				# print num_vm, load_serv
+				# results_cost.append(cp_cost)
+		results.append(results_opt_alpha_s)
+		configs.append(results_config)
+		# num_servers.append(results_total_servers)
+	filename = '../graphs/mg1/SingleUserEfficiencyVarySCcost'+ '.png'
+	# filename = '../graphs/mg1/singleUserDelaysOptimalSCUser'  + '.png'
+	fig = plt.figure()
+	legends = []
+	# for val_lambda in lambdas:
+	# 	key = r'$\lambda$=' + str(val_lambda)
+	# 	legends.append(key)
+	for ratio in cp_cost_ratios:
+		key = r'$\alpha_{s\_cp}$=' + str(ratio) + r'$\alpha_{v\_cp}$'
+		legends.append(key)
+	plt.subplot(2, 1, 1)
+	plt.plot(mu_s_ratios[::10], results[0][::10], 'c*', markersize=7)
+	plt.plot(mu_s_ratios[::10], results[1][::10], 'ro', markersize=7)
+	plt.plot(mu_s_ratios[::10], results[2][::10], 'g^', markersize=7)
+	plt.plot(mu_s_ratios[::10], results[3][::10], 'bs', markersize=7)
+	plt.plot(mu_s_ratios, results[0], 'c', linewidth='2')
+	plt.plot(mu_s_ratios, results[1], 'r', linewidth='2')
+	plt.plot(mu_s_ratios, results[2], 'g', linewidth='2')
+	plt.plot(mu_s_ratios, results[3], 'b', linewidth='2')
+
+	# plt.legend(legends, loc='lower right', fontsize=21)
+	labelstr = 'Optimal ' + r'$\alpha_s$'
+	# plt.ylabel('Cloud Provider Profit', fontsize=25)
+	plt.ylabel(labelstr, fontsize=25)
+	# plt.ylabel('Revenue from User', fontsize=25)
+	# plt.xlabel(r'$\mu_s/\mu_v$', fontsize=25)
+
+	plt.subplot(2, 1, 2)
+	plt.plot(mu_s_ratios[::10], configs[0][::10], 'c*', markersize=7)
+	plt.plot(mu_s_ratios[::10], configs[1][::10], 'ro', markersize=7)
+	plt.plot(mu_s_ratios[::10], configs[2][::10], 'g^', markersize=7)
+	plt.plot(mu_s_ratios[::10], configs[3][::10], 'bs', markersize=7)
+	plt.plot(mu_s_ratios, configs[0], 'c', linewidth='2')
+	plt.plot(mu_s_ratios, configs[1], 'r', linewidth='2')
+	plt.plot(mu_s_ratios, configs[2], 'g', linewidth='2')
+	plt.plot(mu_s_ratios, configs[3], 'b', markersize=7)
+
+	# plt.legend(legends, loc='upper right', fontsize=21)
+	plt.yticks([0,1,2,3,4], ('', 'SC', 'SC + VM', 'VM', ''))
+	# plt.ylabel('Configuration', fontsize=25)
+	plt.xlabel(r'$\mu_s/\mu_v$', fontsize=20)
+	plt.legend(legends, loc='lower right', fontsize=15)
+
+	plt.savefig(filename)
+
 
 # 1: SC only, 2 : Hybrid, 3: VM only
 def plotSingleUserEfficiencyVaryMu():
@@ -458,6 +562,14 @@ def plotSingleUserEfficiency(mode):
 
 	plt.savefig(filename)
 
+def computeZipfConstant(max_lambda, zipf_alpha):
+	const = 0
+	for val_lambda in range(1, max_lambda+1):
+		const += math.pow((1.0/val_lambda), zipf_alpha)
+	print const 
+	return const
+
+
 def plotSingleUserDistVaryMu(mode, dist):
 	max_lambda = 10000
 	lambdas = [x for x in range(1, max_lambda)]
@@ -474,6 +586,8 @@ def plotSingleUserDistVaryMu(mode, dist):
 	# cp_alpha_s = 0.3
 	beta = 0.9
 	gamma = 1
+	zipf_alpha = 100
+	zipf_contant = computeZipfConstant(max_lambda, zipf_alpha)
 	total_num_vm = 0
 	total_num_serv = 0
 	results = []
@@ -514,7 +628,7 @@ def plotSingleUserDistVaryMu(mode, dist):
 					if dist == 'Uniform':
 						profit += ((1.0/max_lambda)*(revenue - cp_cost))
 					elif dist == 'Zipf':
-						profit += (((1.0/val_lambda)*(revenue - cp_cost))/9.787)
+						profit += ((math.pow((1.0/val_lambda),zipf_alpha)*(revenue - cp_cost))/zipf_contant)
 				if profit > max_profit:
 					max_profit = profit
 					optimal_alpha_s = alpha_s
@@ -547,7 +661,7 @@ def plotSingleUserDist(mode, dist):
 	max_lambda = 10000
 	lambdas = [x for x in range(1, max_lambda)]
 	alpha_v = 1.0
-	price_ratios = [.01*x for x in range(100,500)]
+	price_ratios = [.01*x for x in range(100,1000)]
 	cp_cost_ratios = [0.5, 1, 1.5]
 	mu_server = 30.0
 	mu_v = 5.0
@@ -558,6 +672,8 @@ def plotSingleUserDist(mode, dist):
 	# cp_alpha_s = 0.3
 	beta = 0.9
 	gamma = 1
+	zipf_alpha = 1
+	zipf_contant = computeZipfConstant(max_lambda, zipf_alpha)
 	total_num_vm = 0
 	total_num_serv = 0
 	results = []
@@ -592,7 +708,7 @@ def plotSingleUserDist(mode, dist):
 				if dist == 'Uniform':
 					profit += ((1.0/max_lambda)*(revenue - cp_cost))
 				elif dist == 'Zipf':
-					profit += (((1.0/val_lambda)*(revenue - cp_cost))/9.787)
+					profit += ((math.pow((1.0/val_lambda),zipf_alpha)*(revenue - cp_cost))/zipf_contant)
 			results.append(results_cost)
 			total_profit.append(profit)
 		profits.append(total_profit)
@@ -611,7 +727,7 @@ def plotSingleUserDist(mode, dist):
 	plt.plot(price_ratios, profits[2], 'g', linewidth='2')
 	# plt.plot(price_ratios, profits[3], 'b', linewidth='2')
 
-	plt.legend(legends, loc='upper right', fontsize=21)
+	plt.legend(legends, loc='lower right', fontsize=21)
 	plt.ylabel('Cloud Provider Profit', fontsize=25)
 	plt.xlabel(r'$\alpha_s$', fontsize=25)
 	plt.savefig(filename)
@@ -967,7 +1083,7 @@ def main():
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
 		print "<exp_type> : costserv_to_vm_ON/costserv_to_vm_ON_OFF"
 		print "<exp_type> : mus_to_muv_ON_OFF"
-		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC/plotSingleUserOptimalSCvaryDelay/plotSingleUserEfficiency/plotSingleUserDist/plotSingleUserEfficiencyVaryMu/plotSingleUserDistVaryMu"
+		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC/plotSingleUserOptimalSCvaryDelay/plotSingleUserEfficiency/plotSingleUserDist/plotSingleUserEfficiencyVaryMu/plotSingleUserDistVaryMu/plotSingleUserEfficiencyVarySCcost"
 		return
 	exp_type = sys.argv[1]
 	if exp_type == 'vary_startup_delay':
@@ -1016,13 +1132,15 @@ def main():
 		plotSingleUserOptimalSCvaryDelay()
 	elif exp_type == 'plotSingleUserOptimalSCvaryCPcost':
 		plotSingleUserOptimalSCvaryCPcost()
+	elif exp_type == 'plotSingleUserEfficiencyVarySCcost':
+		plotSingleUserEfficiencyVarySCcost()
 	else:
 		print "Wrong <exp_type>"
 		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"
 		print "<exp_type> : multipleVMs_vary_price_ratio/multipleVMs_vary_mu/multipleVMonoff_vary_price_ratio/multipleVMonoff_vary_mu/multipleVMonoff_vary_gamma"
 		print "<exp_type> : costserv_to_vm_ON/costserv_to_vm_ON_OFF"
 		print "<exp_type> : mus_to_muv_ON_OFF"
-		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC/plotSingleUserOptimalSCvaryDelay/plotSingleUserEfficiency/plotSingleUserDist/plotSingleUserEfficiencyVaryMu/plotSingleUserDistVaryMu"
+		print "<exp_type> : plotMultUsers/plotSingleUser/plotSingleUserOptimalSC/plotSingleUserOptimalSCvaryDelay/plotSingleUserEfficiency/plotSingleUserDist/plotSingleUserEfficiencyVaryMu/plotSingleUserDistVaryMu/plotSingleUserEfficiencyVarySCcost"
 
 if __name__ == '__main__':
 	main()
