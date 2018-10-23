@@ -574,12 +574,12 @@ def plotSingleUserDistVaryMu(mode, dist):
 	max_lambda = 10000
 	lambdas = [x for x in range(1, max_lambda)]
 	alpha_v = 1.0
-	price_ratios = [.01*x for x in range(100,500)]
+	price_ratios = [.1*x for x in range(100,1000)]
 	cp_cost_ratios = [0.5, 1, 1.5]
 	mu_server = 30.0
 	mu_v = 5.0
 	# mu_s = 10.0
-	mu_s_ratios = [0.01*x for x in range(100,300)]
+	mu_s_ratios = [0.1*x for x in range(100,300)]
 	eff_s = 5.0
 	eff_v = 10.0
 	cp_alpha_v = 0.2
@@ -598,6 +598,7 @@ def plotSingleUserDistVaryMu(mode, dist):
 		print cp_ratio
 		cp_alpha_s = cp_alpha_v * cp_ratio
 		total_profit = [] 
+		optimal_a_s = []
 		for mu_ratio in mu_s_ratios:
 			mu_s = mu_ratio * mu_v
 			max_profit = -10000000000000000
