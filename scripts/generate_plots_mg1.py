@@ -18,6 +18,258 @@ import math
 
 markers = ['s', 'h', '^', '*', 'o', 'p', '+', 'x', '<', 'D', '>', 'v', 'd', 0, 5, 2, 7, 1, 4, 3, 6, '1', '2', '3', '4', '8']
 
+def zipfdistribution():
+	max_lambda = 10000
+	delta = 0.9
+	mu_v = 1.0
+	mu_s = 2
+	beta_v = 0.2
+	beta_s = (mu_v/mu_s)*beta_v
+	alpha_v = 1.0
+	lambda_v = []
+	lambda_s = []
+	sc_load = []
+	optimal_alpha_s = []
+	exponent = [0.1*x for x in range(10,90)]
+	print "lam\tp_sc\tp_scvm\tp_vm\ta_sc\ta_scvm\tmp\topt_as"
+	for val_exponent in exponent:
+		expected_lam = computeZipfConstant(max_lambda, val_exponent-1)/computeZipfConstant(max_lambda, val_exponent)
+		opt_alpha_s = -1
+		alpha_s_sc = mu_s/delta
+		# p_sc = math.ceil(val_lambda/mu_s)*(alpha_s_sc - (beta_v/mu_s))
+		p_sc = (expected_lam/mu_s)*(alpha_s_sc - (beta_v/mu_s))
+
+		alpha_s_scvm = p_scvm = -1
+		if expected_lam - (math.floor(expected_lam/(delta*mu_v))*(delta*mu_v)) != 0:
+			alpha_s_scvm = mu_s/(expected_lam - ((math.floor(expected_lam/(delta*mu_v)))*(delta*mu_v)))
+			p_scvm = (math.floor(expected_lam/(delta*mu_v))*(1-beta_v)) +   ((alpha_s_scvm - (beta_v/mu_s))*((expected_lam - ((math.floor(expected_lam/(delta*mu_v)))*(delta*mu_v)))/mu_s))
+		p_vm = (1 + math.floor(expected_lam/(delta*mu_v)))*(1-beta_v)
+		max_profit = max(p_sc, p_vm, p_scvm)
+		if max_profit == p_sc:
+			lambda_v.append(0)
+			opt_alpha_s = alpha_s_sc
+			lambda_s.append(expected_lam)
+		elif max_profit == p_scvm:
+			opt_alpha_s = alpha_s_scvm
+			lambda_v.append(math.floor(expected_lam/(delta*mu_v))*delta*mu_v)
+			lambda_s.append(expected_lam - ((math.floor(expected_lam/(delta*mu_v)))*(delta*mu_v)))
+		else:
+			opt_alpha_s = alpha_s_scvm
+			lambda_v.append((1+math.floor(expected_lam/(delta*mu_v)))*delta*mu_v)
+			lambda_s.append(0)		
+		optimal_alpha_s.append(opt_alpha_s)
+		# optimal_alpha_s.append(expected_lam)
+		expected_lam = float("{0:.2f}".format(expected_lam))
+		alpha_s_sc = float("{0:.2f}".format(alpha_s_sc))
+		alpha_s_scvm = float("{0:.2f}".format(alpha_s_scvm))
+		p_sc = float("{0:.2f}".format(p_sc))
+		p_scvm = float("{0:.2f}".format(p_scvm))
+		p_vm = float("{0:.2f}".format(p_vm))
+		max_profit = float("{0:.2f}".format(max_profit))
+		opt_alpha_s = float("{0:.2f}".format(opt_alpha_s))
+		print str(expected_lam) + "\t" + str(p_sc) + "\t" + str(p_scvm) + "\t" + str(p_vm) + "\t" + str(alpha_s_sc) + "\t" + str(alpha_s_scvm) + "\t" +  str(max_profit) + "\t" +  str(opt_alpha_s)
+			
+	filename = '../graphs/mg1/zipf.png'
+	fig = plt.figure()
+	legends = []
+	# plt.subplot(2,1,1)
+	# for val_lambda in lambdas:
+	# 	key = r'$\lambda$=' + str(val_lambda)
+	# 	legends.append(key)
+	plt.plot(exponent[::2], optimal_alpha_s[::2], 'c*', markersize=7)
+	plt.plot(exponent, optimal_alpha_s, 'c', linewidth='2')
+	plt.ylabel('Optimal ' + r'$\alpha_s$', fontsize=25)
+	plt.xlabel('zipf exponent', fontsize=20)
+	plt.savefig(filename)
+
+def get_optimal_alpha_s_vary_beta_v():
+	max_lambda = 15
+	# lambdas = [x for x in range(1,max_lambda+1)]
+	# lambdas = [x for x in range(1,max_lambda+1)]
+	lambdas = [1,2,3,6]
+	delta = 0.9
+	mu_v = 1.0
+	# mu_s_ratios = [1.3, 2, 3
+	mu_s = 2.0
+	beta_v_values = [0.01*x for x in range(10, 90)]
+	
+	alpha_v = 1.0
+	lambda_v = []
+	sc_load = []
+	optimal_alpha_s = []
+	print "lam\tp_sc\tp_scvm\tp_vm\ta_sc\ta_scvm\tmp\topt_as"
+	for val_lambda in lambdas:
+		lambda_s = []	
+		results = []
+		for beta_v in beta_v_values:
+			beta_s = (mu_v/mu_s)*beta_v
+			opt_alpha_s = -1
+			alpha_s_sc = mu_s/delta
+			# p_sc = math.ceil(val_lambda/mu_s)*(alpha_s_sc - (beta_v/mu_s))
+			p_sc = (val_lambda/mu_s)*(alpha_s_sc - (beta_v/mu_s))
+
+			alpha_s_scvm = p_scvm = -1
+			if val_lambda - (math.floor(val_lambda/(delta*mu_v))*(delta*mu_v)) != 0:
+				alpha_s_scvm = mu_s/(val_lambda - ((math.floor(val_lambda/(delta*mu_v)))*(delta*mu_v)))
+				p_scvm = (math.floor(val_lambda/(delta*mu_v))*(1-beta_v)) +   ((alpha_s_scvm - (beta_v/mu_s))*((val_lambda - ((math.floor(val_lambda/(delta*mu_v)))*(delta*mu_v)))/mu_s))
+			p_vm = (1 + math.floor(val_lambda/(delta*mu_v)))*(1-beta_v)
+			max_profit = max(p_sc, p_vm, p_scvm)
+			if max_profit == p_sc:
+				lambda_v.append(0)
+				opt_alpha_s = alpha_s_sc
+				lambda_s.append(val_lambda)
+			elif max_profit == p_scvm:
+				opt_alpha_s = alpha_s_scvm
+				lambda_v.append(math.floor(val_lambda/(delta*mu_v))*delta*mu_v)
+				lambda_s.append(val_lambda - ((math.floor(val_lambda/(delta*mu_v)))*(delta*mu_v)))
+			else:
+				opt_alpha_s = alpha_s_scvm
+				lambda_v.append((1+math.floor(val_lambda/(delta*mu_v)))*delta*mu_v)
+				lambda_s.append(0)
+
+			# alpha_s_sc = float("{0:.2f}".format(alpha_s_sc))
+			# alpha_s_scvm = float("{0:.2f}".format(alpha_s_scvm))
+			# p_sc = float("{0:.2f}".format(p_sc))
+			# p_scvm = float("{0:.2f}".format(p_scvm))
+			# p_vm = float("{0:.2f}".format(p_vm))
+			# max_profit = float("{0:.2f}".format(max_profit))
+			# opt_alpha_s = float("{0:.2f}".format(opt_alpha_s))
+			# print str(val_lambda) + "\t" + str(p_sc) + "\t" + str(p_scvm) + "\t" + str(p_vm) + "\t" + str(alpha_s_sc) + "\t" + str(alpha_s_scvm) + "\t" +  str(max_profit) + "\t" +  str(opt_alpha_s)
+			results.append(opt_alpha_s)
+		optimal_alpha_s.append(results)
+		sc_load.append(lambda_s)
+	filename = '../graphs/mg1/optimal_alpha_vary_beta_v'  + '.png'
+	fig = plt.figure()
+	legends = []
+	plt.subplot(2,1,1)
+	for val_lambda in lambdas:
+		key = r'$\lambda$=' + str(val_lambda)
+		legends.append(key)
+	plt.plot(beta_v_values[::5], optimal_alpha_s[0][::5], 'c*', markersize=7)
+	plt.plot(beta_v_values[::5], optimal_alpha_s[1][::5], 'ro', markersize=7)
+	plt.plot(beta_v_values[::5], optimal_alpha_s[2][::5], 'g^', markersize=7)
+	plt.plot(beta_v_values[::5], optimal_alpha_s[3][::5], 'bs', markersize=7)
+	plt.plot(beta_v_values, optimal_alpha_s[0], 'c', linewidth='2')
+	plt.plot(beta_v_values, optimal_alpha_s[1], 'r', linewidth='2')
+	plt.plot(beta_v_values, optimal_alpha_s[2], 'g', linewidth='2')
+	plt.plot(beta_v_values, optimal_alpha_s[3], 'b', linewidth='2')
+
+	plt.legend(legends, loc='upper right', fontsize=15)
+	plt.ylabel('Optimal ' + r'$\alpha_s$', fontsize=25)
+
+
+	# plt.subplot(2,1,2)
+	# plt.plot(lambdas[::5], lambda_v[::5], 'c*', markersize=7)
+	# plt.plot(lambdas, lambda_v, 'c', linewidth='2')
+	# plt.ylabel(r'$\lambda_v$', fontsize=25)
+	# plt.xlabel(r'$\lambda$', fontsize=25)
+	# plt.savefig(filename)
+
+	plt.subplot(2,1,2)
+	plt.plot(beta_v_values[::5], sc_load[0][::5], 'c*', markersize=7)
+	plt.plot(beta_v_values[::5], sc_load[1][::5], 'ro', markersize=7)
+	plt.plot(beta_v_values[::5], sc_load[2][::5], 'g^', markersize=7)
+	plt.plot(beta_v_values[::5], sc_load[3][::5], 'bs', markersize=7)
+	plt.plot(beta_v_values, sc_load[0], 'c', linewidth='2')
+	plt.plot(beta_v_values, sc_load[1], 'r', linewidth='2')
+	plt.plot(beta_v_values, sc_load[2], 'g', linewidth='2')
+	plt.plot(beta_v_values, sc_load[3], 'b', linewidth='2')
+	plt.ylabel(r'$\lambda_s$', fontsize=25)
+	plt.xlabel(r'$\beta_v$', fontsize=20)
+	plt.savefig(filename)
+
+def get_optimal_alpha_s():
+	max_lambda = 15
+	# lambdas = [x for x in range(1,max_lambda+1)]
+	lambdas = [x for x in range(1,max_lambda+1)]
+	delta = 0.9
+	mu_v = 1.0
+	mu_s_ratios = [1.3, 2, 3]
+	# mu_s = 2.0
+	beta_v = 0.2
+	
+	alpha_v = 1.0
+	lambda_v = []
+	sc_load = []
+	optimal_alpha_s = []
+	print "lam\tp_sc\tp_scvm\tp_vm\ta_sc\ta_scvm\tmp\topt_as"
+	for ratio in mu_s_ratios:
+		mu_s = ratio * mu_v
+		beta_s = (mu_v/mu_s)*beta_v
+		lambda_s = []	
+		results = []
+		for val_lambda in lambdas:
+			opt_alpha_s = -1
+			alpha_s_sc = mu_s/delta
+			# p_sc = math.ceil(val_lambda/mu_s)*(alpha_s_sc - (beta_v/mu_s))
+			p_sc = (val_lambda/mu_s)*(alpha_s_sc - (beta_v/mu_s))
+
+			alpha_s_scvm = p_scvm = -1
+			if val_lambda - (math.floor(val_lambda/(delta*mu_v))*(delta*mu_v)) != 0:
+				alpha_s_scvm = mu_s/(val_lambda - ((math.floor(val_lambda/(delta*mu_v)))*(delta*mu_v)))
+				p_scvm = (math.floor(val_lambda/(delta*mu_v))*(1-beta_v)) +   ((alpha_s_scvm - (beta_v/mu_s))*((val_lambda - ((math.floor(val_lambda/(delta*mu_v)))*(delta*mu_v)))/mu_s))
+			p_vm = (1 + math.floor(val_lambda/(delta*mu_v)))*(1-beta_v)
+			max_profit = max(p_sc, p_vm, p_scvm)
+			if max_profit == p_sc:
+				lambda_v.append(0)
+				opt_alpha_s = alpha_s_sc
+				lambda_s.append(val_lambda)
+			elif max_profit == p_scvm:
+				opt_alpha_s = alpha_s_scvm
+				lambda_v.append(math.floor(val_lambda/(delta*mu_v))*delta*mu_v)
+				lambda_s.append(val_lambda - ((math.floor(val_lambda/(delta*mu_v)))*(delta*mu_v)))
+			else:
+				opt_alpha_s = alpha_s_scvm
+				lambda_v.append((1+math.floor(val_lambda/(delta*mu_v)))*delta*mu_v)
+				lambda_s.append(0)
+
+			alpha_s_sc = float("{0:.2f}".format(alpha_s_sc))
+			alpha_s_scvm = float("{0:.2f}".format(alpha_s_scvm))
+			p_sc = float("{0:.2f}".format(p_sc))
+			p_scvm = float("{0:.2f}".format(p_scvm))
+			p_vm = float("{0:.2f}".format(p_vm))
+			max_profit = float("{0:.2f}".format(max_profit))
+			opt_alpha_s = float("{0:.2f}".format(opt_alpha_s))
+			print str(val_lambda) + "\t" + str(p_sc) + "\t" + str(p_scvm) + "\t" + str(p_vm) + "\t" + str(alpha_s_sc) + "\t" + str(alpha_s_scvm) + "\t" +  str(max_profit) + "\t" +  str(opt_alpha_s)
+			results.append(opt_alpha_s)
+		optimal_alpha_s.append(results)
+		sc_load.append(lambda_s)
+	filename = '../graphs/mg1/optimal_alpha'  + '.png'
+	fig = plt.figure()
+	legends = []
+	plt.subplot(2,1,1)
+	for ratio in mu_s_ratios:
+		key = r'$\mu_s$=' + str(ratio) + r'$\mu_v$'
+		legends.append(key)
+	plt.plot(lambdas[::1], optimal_alpha_s[0][::1], 'c*', markersize=7)
+	plt.plot(lambdas[::1], optimal_alpha_s[1][::1], 'ro', markersize=7)
+	plt.plot(lambdas[::1], optimal_alpha_s[2][::1], 'g^', markersize=7)
+	plt.plot(lambdas, optimal_alpha_s[0], 'c', linewidth='2')
+	plt.plot(lambdas, optimal_alpha_s[1], 'r', linewidth='2')
+	plt.plot(lambdas, optimal_alpha_s[2], 'g', linewidth='2')
+
+	plt.legend(legends, loc='upper right', fontsize=15)
+	plt.ylabel('Optimal ' + r'$\alpha_s$', fontsize=25)
+
+
+	# plt.subplot(2,1,2)
+	# plt.plot(lambdas[::5], lambda_v[::5], 'c*', markersize=7)
+	# plt.plot(lambdas, lambda_v, 'c', linewidth='2')
+	# plt.ylabel(r'$\lambda_v$', fontsize=25)
+	# plt.xlabel(r'$\lambda$', fontsize=25)
+	# plt.savefig(filename)
+
+	plt.subplot(2,1,2)
+	plt.plot(lambdas[::1], sc_load[0][::1], 'c*', markersize=7)
+	plt.plot(lambdas[::1], sc_load[1][::1], 'ro', markersize=7)
+	plt.plot(lambdas[::1], sc_load[2][::1], 'g^', markersize=7)
+	plt.plot(lambdas, sc_load[0], 'c', linewidth='2')
+	plt.plot(lambdas, sc_load[1], 'r', linewidth='2')
+	plt.plot(lambdas, sc_load[2], 'g', linewidth='2')
+	plt.ylabel(r'$\lambda_s$', fontsize=25)
+	plt.xlabel(r'$\lambda$', fontsize=25)
+	plt.savefig(filename)
+
 def get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda):
 	Lv = beta * mu_v
 	Ls = ((alpha_v*mu_s)/(alpha_s*mu_v))*(mu_v + gamma) - gamma	
@@ -49,8 +301,8 @@ def get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda):
 
 
 def get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda):
-	Ls = (alpha_v/alpha_s)*mu_s
-	Lv = beta*mu_v
+	Ls = float((alpha_v/float(alpha_s))*mu_s)
+	Lv = float(beta*mu_v)
 	# print "Ls = %d\tLv = %d" % (Ls, Lv)
 	cost = 0
 	num_vm = 0
@@ -77,7 +329,8 @@ def get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda):
 
 def getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta):
 	# serv_cost = cp_alpha_s * (math.ceil((val_lambda / (beta*mu_s))) - num_vm)
-	serv_cost = cp_alpha_s * math.ceil(load_serv / mu_s) 
+	# serv_cost = cp_alpha_s * math.ceil(load_serv / mu_s) 
+	serv_cost = cp_alpha_s * (load_serv / mu_s) 
 	vm_cost = cp_alpha_v * num_vm
 	return serv_cost + vm_cost
 
@@ -451,28 +704,32 @@ def plotSingleUserEfficiencyVaryMu():
 
 
 def plotSingleUserEfficiency(mode):
+	# val_lambda = 1
 	alpha_v = 1.0
-	price_ratios = [0.01*x for x in range(100,500)]
+	price_ratios = [0.01*x for x in range(100,800)]
 	mu_server = 30.0
-	mu_v = 5.0
-	mu_s = 10.0
+	mu_v = 1.0
+	mu_s = 2.0
 	eff_s = 5.0
 	eff_v = 10.0
 	cp_alpha_v = 0.2
+	cp_alpha_s = mu_v*cp_alpha_v/mu_s
 	# cp_alpha_s = 0.3
-	cp_cost_ratios = [0.5, 1, 1.5, 2.1]
+	# cp_cost_ratios = [0.5, 1, 1.5, 2.1]
+	cp_cost_ratios = [0.5]
 	beta = 0.9
 	gamma = 1
 	total_num_vm = 0
 	total_num_serv = 0
 	results = []
-	lambdas = [4, 20, 40]
+	lambdas = [3, 10, 15]
+	# lambdas = [3]
+	
 	num_servers = []
 	# lambdas = [20, 60, 100]
 	# lambdas = [100]
-	for cp_ratio in cp_cost_ratios:
-		val_lambda = 40
-		cp_alpha_s = cp_ratio * cp_alpha_v
+	for val_lambda in lambdas:
+		# cp_alpha_s = cp_ratio * cp_alpha_v
 		results_num_vm = []
 		results_num_serv = []
 		results_total_servers = []
@@ -484,7 +741,7 @@ def plotSingleUserEfficiency(mode):
 				num_vm, load_serv, revenue = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
 			elif mode == 'AO':
 				num_vm, load_serv, revenue = get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
-				print "here"
+				# print "here"
 			cp_cost = getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)		
 			results_cost.append(revenue - cp_cost)
 			results_total_servers.append(getNumServers(num_vm, load_serv, mu_v, mu_s, mu_server, eff_v, eff_s))
@@ -495,78 +752,102 @@ def plotSingleUserEfficiency(mode):
 	filename = '../graphs/mg1/singleUserEfficiency' + mode + '.png'
 	# filename = '../graphs/mg1/singleUserDelaysOptimalSCUser'  + '.png'
 	fig = plt.figure()
-	legends = []
+	plt.subplot(1,1,1)
+	fig.text(0.06, 0.5, 'Cloud Provider Profit', ha='center', va='center', rotation='vertical', fontsize=25)
+	# plt.ylabel('Cloud Provider Profit', fontsize=25)
+
 	# for val_lambda in lambdas:
 	# 	key = r'$\lambda$=' + str(val_lambda)
 	# 	legends.append(key)
-	for ratio in cp_cost_ratios:
-		key = r'$\alpha_{s\_cp}$=' + str(ratio) + r'$\alpha_{v\_cp}$'
-		legends.append(key)
-	plt.plot(price_ratios[::100], results[0][::100], 'c*', markersize=7)
-	plt.plot(price_ratios[::100], results[1][::100], 'ro', markersize=7)
-	plt.plot(price_ratios[::100], results[2][::100], 'g^', markersize=7)
-	plt.plot(price_ratios[::100], results[3][::100], 'bs', markersize=7)
+	# for ratio in cp_cost_ratios:
+	# 	key = r'$\alpha_{s\_cp}$=' + str(ratio) + r'$\alpha_{v\_cp}$'
+	# 	legends.append(key)
+	plt.subplot(2,1,1)
+	plt.plot(price_ratios[::90], results[0][::90], 'c*', markersize=7)
+	# plt.plot(price_ratios[::100], results[1][::100], 'ro', markersize=7)
+	# plt.plot(price_ratios[::100], results[2][::100], 'g^', markersize=7)
+	# plt.plot(price_ratios[::100], results[3][::100], 'bs', markersize=7)
 	plt.plot(price_ratios, results[0], 'c', linewidth='2')
-	plt.plot(price_ratios, results[1], 'r', linewidth='2')
-	plt.plot(price_ratios, results[2], 'g', linewidth='2')
-	plt.plot(price_ratios, results[3], 'b', linewidth='2')
+	legends = []
+	key = r'$\lambda$=' + str(lambdas[0])
+	legends.append(key)
+	plt.legend(legends, loc='lower right', fontsize=21)
+	# plt.plot(price_ratios, results[1], 'r', linewidth='2')
+	# plt.plot(price_ratios, results[2], 'g', linewidth='2')
+	# plt.plot(price_ratios, results[3], 'b', linewidth='2')
 
-	plt.legend(legends, loc='upper right', fontsize=21)
-	labelstr = 'Cloud Provider Profit for ' + r'$\lambda$' + ' = 40'
+	# plt.subplot(3,1,2)
+	# plt.plot(price_ratios[::100], results[1][::100], 'ro', markersize=7)
+	# plt.plot(price_ratios, results[1], 'r', linewidth='2')
+	# legends = []
+	# key = r'$\lambda$=' + str(lambdas[1])
+	# legends.append(key)
+	# plt.legend(legends, loc='lower right', fontsize=21)
+
+	plt.subplot(2,1,2)
+	plt.plot(price_ratios[::90], results[2][::90], 'g^', markersize=7)
+	plt.plot(price_ratios, results[2], 'g', linewidth='2')
+	legends = []
+	key = r'$\lambda$=' + str(lambdas[2])
+	legends.append(key)
+	plt.legend(legends, loc='lower right', fontsize=21)
+
+	# plt.legend(legends, loc='upper right', fontsize=21)
+	# labelstr = 'Cloud Provider Profit for ' + r'$\lambda$' + ' = ' + str(val_lambda)
+	# plt.ylabel(labelstr, fontsize=25)
 	# plt.ylabel('Cloud Provider Profit', fontsize=25)
-	plt.ylabel(labelstr, fontsize=25)
 	# plt.ylabel('Revenue from User', fontsize=25)
 	plt.xlabel(r'$\alpha_s$', fontsize=25)
 	plt.savefig(filename)
 
-	filename = '../graphs/mg1/singleUserEfficiencyServers'  + '.png'
-	fig = plt.figure()
-	legends = []
-	for val_lambda in lambdas:
-		key = r'$\lambda$=' + str(val_lambda)
-		legends.append(key)
-	plt.subplot(2, 1, 2)
-	plt.plot(price_ratios[::100], num_servers[0][::100], 'c*', markersize=7)
-	plt.plot(price_ratios[::100], num_servers[1][::100], 'ro', markersize=7)
-	plt.plot(price_ratios[::100], num_servers[2][::100], 'g^', markersize=7)
-	# plt.plot(lambdas[::200], results[3][::200], 'bs', markersize=7)
-	plt.plot(price_ratios, num_servers[0], 'c', linewidth='2')
-	plt.plot(price_ratios, num_servers[1], 'r', linewidth='2')
-	plt.plot(price_ratios, num_servers[2], 'g', linewidth='2')
-	# plt.plot(lambdas, results[3], 'b', linewidth='2')
+	# filename = '../graphs/mg1/singleUserEfficiencyServers'  + '.png'
+	# fig = plt.figure()
+	# legends = []
+	# for val_lambda in lambdas:
+	# 	key = r'$\lambda$=' + str(val_lambda)
+	# 	legends.append(key)
+	# plt.subplot(2, 1, 2)
+	# plt.plot(price_ratios[::100], num_servers[0][::100], 'c*', markersize=7)
+	# plt.plot(price_ratios[::100], num_servers[1][::100], 'ro', markersize=7)
+	# plt.plot(price_ratios[::100], num_servers[2][::100], 'g^', markersize=7)
+	# # plt.plot(lambdas[::200], results[3][::200], 'bs', markersize=7)
+	# plt.plot(price_ratios, num_servers[0], 'c', linewidth='2')
+	# plt.plot(price_ratios, num_servers[1], 'r', linewidth='2')
+	# plt.plot(price_ratios, num_servers[2], 'g', linewidth='2')
+	# # plt.plot(lambdas, results[3], 'b', linewidth='2')
 
-	plt.legend(legends, loc='upper right', fontsize=21)
-	plt.ylabel('Servers ', fontsize=25)
-	# plt.ylabel('Revenue from User', fontsize=25)
-	plt.xlabel(r'$\alpha_s$', fontsize=25)
-
-	plt.subplot(2,1,1)
-	legends = []
-	for val_lambda in lambdas:
-		key = r'$\lambda$=' + str(val_lambda)
-		legends.append(key)
-	plt.plot(price_ratios[::100], results[0][::100], 'c*', markersize=7)
-	plt.plot(price_ratios[::100], results[1][::100], 'ro', markersize=7)
-	plt.plot(price_ratios[::100], results[2][::100], 'g^', markersize=7)
-	# plt.plot(lambdas[::200], results[3][::200], 'bs', markersize=7)
-	plt.plot(price_ratios, results[0], 'c', linewidth='2')
-	plt.plot(price_ratios, results[1], 'r', linewidth='2')
-	plt.plot(price_ratios, results[2], 'g', linewidth='2')
-	# plt.plot(lambdas, results[3], 'b', linewidth='2')
-
-	plt.legend(legends, loc='upper right', fontsize=21)
-	plt.ylabel('Cloud Profit', fontsize=25)
-	# plt.ylabel('Revenue from User', fontsize=25)
+	# plt.legend(legends, loc='upper right', fontsize=21)
+	# plt.ylabel('Servers ', fontsize=25)
+	# # plt.ylabel('Revenue from User', fontsize=25)
 	# plt.xlabel(r'$\alpha_s$', fontsize=25)
 
+	# plt.subplot(2,1,1)
+	# legends = []
+	# for val_lambda in lambdas:
+	# 	key = r'$\lambda$=' + str(val_lambda)
+	# 	legends.append(key)
+	# plt.plot(price_ratios[::100], results[0][::100], 'c*', markersize=7)
+	# plt.plot(price_ratios[::100], results[1][::100], 'ro', markersize=7)
+	# plt.plot(price_ratios[::100], results[2][::100], 'g^', markersize=7)
+	# # plt.plot(lambdas[::200], results[3][::200], 'bs', markersize=7)
+	# plt.plot(price_ratios, results[0], 'c', linewidth='2')
+	# plt.plot(price_ratios, results[1], 'r', linewidth='2')
+	# plt.plot(price_ratios, results[2], 'g', linewidth='2')
+	# # plt.plot(lambdas, results[3], 'b', linewidth='2')
 
-	plt.savefig(filename)
+	# plt.legend(legends, loc='upper right', fontsize=21)
+	# plt.ylabel('Cloud Profit', fontsize=25)
+	# # plt.ylabel('Revenue from User', fontsize=25)
+	# # plt.xlabel(r'$\alpha_s$', fontsize=25)
+
+
+	# plt.savefig(filename)
 
 def computeZipfConstant(max_lambda, zipf_alpha):
 	const = 0
 	for val_lambda in range(1, max_lambda+1):
 		const += math.pow((1.0/val_lambda), zipf_alpha)
-	print const 
+	# print const 
 	return const
 
 
@@ -574,12 +855,12 @@ def plotSingleUserDistVaryMu(mode, dist):
 	max_lambda = 10000
 	lambdas = [x for x in range(1, max_lambda)]
 	alpha_v = 1.0
-	price_ratios = [.1*x for x in range(100,1000)]
+	price_ratios = [.1*x for x in range(10,300)]
 	cp_cost_ratios = [0.5, 1, 1.5]
 	mu_server = 30.0
 	mu_v = 5.0
 	# mu_s = 10.0
-	mu_s_ratios = [0.1*x for x in range(100,300)]
+	mu_s_ratios = [0.01*x for x in range(100,600)]
 	eff_s = 5.0
 	eff_v = 10.0
 	cp_alpha_v = 0.2
@@ -594,16 +875,18 @@ def plotSingleUserDistVaryMu(mode, dist):
 	total_profit = []
 	profits = []
 	optimal_a_s = []
+	configs = []
 	for cp_ratio in cp_cost_ratios:
 		print cp_ratio
 		cp_alpha_s = cp_alpha_v * cp_ratio
 		total_profit = [] 
 		optimal_a_s = []
+		optimal_config = []
 		for mu_ratio in mu_s_ratios:
 			mu_s = mu_ratio * mu_v
 			max_profit = -10000000000000000
 			optimal_alpha_s = -1
-			# config = 0
+			opt_config = -1
 			for ratio in price_ratios:
 				alpha_s = alpha_v * ratio
 				results_num_vm = []
@@ -611,6 +894,8 @@ def plotSingleUserDistVaryMu(mode, dist):
 				results_total_servers = []
 				results_cost = []
 				profit = 0
+				vms = 0
+				serv = 0
 				for val_lambda in lambdas:
 					total_num_vm = 0
 					total_num_serv = 0
@@ -622,6 +907,8 @@ def plotSingleUserDistVaryMu(mode, dist):
 					# num_vm, num_serv, user_cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
 					cp_cost = getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)
 					# print i, num_vm, num_serv
+					vms += num_vm
+					serv += load_serv
 					results_num_vm.append(total_num_vm)
 					results_num_serv.append(total_num_serv)
 					results_total_servers.append(total_num_vm + total_num_serv)		
@@ -629,19 +916,30 @@ def plotSingleUserDistVaryMu(mode, dist):
 					if dist == 'Uniform':
 						profit += ((1.0/max_lambda)*(revenue - cp_cost))
 					elif dist == 'Zipf':
+						if math.pow((1.0/val_lambda),zipf_alpha) < math.pow(10, -10):
+							break
 						profit += ((math.pow((1.0/val_lambda),zipf_alpha)*(revenue - cp_cost))/zipf_contant)
 				if profit > max_profit:
 					max_profit = profit
 					optimal_alpha_s = alpha_s
+					if vms == 0:
+						opt_config = 1
+					elif serv == 0:
+						opt_config = 3
+					else:
+						opt_config = 2
 			total_profit.append(max_profit)
 			optimal_a_s.append(optimal_alpha_s)
+			optimal_config.append(opt_config)
 		results.append(optimal_a_s)
+		configs.append(optimal_config)
 	filename = '../graphs/mg1/' + dist + 'Dist' + mode + 'VaryMu.png'
 	fig = plt.figure()
 	legends = []
 	for ratio in cp_cost_ratios:
 		key = r'$\alpha_{s\_cp}$=' + str(ratio) + r'$\alpha_{v\_cp}$'
 		legends.append(key)
+	plt.subplot(2,1,1)
 	plt.plot(mu_s_ratios[::10], results[0][::10], 'c*', markersize=7)
 	plt.plot(mu_s_ratios[::10], results[1][::10], 'ro', markersize=7)
 	plt.plot(mu_s_ratios[::10], results[2][::10], 'g^', markersize=7)
@@ -651,9 +949,20 @@ def plotSingleUserDistVaryMu(mode, dist):
 	plt.plot(mu_s_ratios, results[2], 'g', linewidth='2')
 	# plt.plot(price_ratios, profits[3], 'b', linewidth='2')
 
-	plt.legend(legends, loc='upper right', fontsize=21)
+	# plt.legend(legends, loc='upper right', fontsize=21)
 	labelstr = 'Optimal ' + r'$\alpha_s$'
 	plt.ylabel(labelstr, fontsize=25)
+	
+
+	plt.subplot(2, 1, 2)
+	plt.plot(mu_s_ratios[::10], configs[0][::10], 'c*', markersize=7)
+	plt.plot(mu_s_ratios[::10], configs[1][::10], 'ro', markersize=7)
+	plt.plot(mu_s_ratios[::10], configs[2][::10], 'g^', markersize=7)
+	plt.plot(mu_s_ratios, configs[0], 'c', linewidth='2')
+	plt.plot(mu_s_ratios, configs[1], 'r', linewidth='2')
+	plt.plot(mu_s_ratios, configs[2], 'g', linewidth='2')
+	plt.yticks([0,1,2,3,4], ('', 'SC', 'SC + VM', 'VM', ''))
+	plt.legend(legends, loc='lower right', fontsize=21)
 	plt.xlabel(r'$\mu_s/\mu_v$', fontsize=20)
 	plt.savefig(filename)
 
@@ -663,7 +972,7 @@ def plotSingleUserDist(mode, dist):
 	lambdas = [x for x in range(1, max_lambda)]
 	alpha_v = 1.0
 	price_ratios = [.01*x for x in range(100,1000)]
-	cp_cost_ratios = [0.5, 1, 1.5]
+	cp_cost_ratios = [0.5]
 	mu_server = 30.0
 	mu_v = 5.0
 	mu_s = 10.0
@@ -673,17 +982,26 @@ def plotSingleUserDist(mode, dist):
 	# cp_alpha_s = 0.3
 	beta = 0.9
 	gamma = 1
-	zipf_alpha = 1
+	zipf_alpha = 100
 	zipf_contant = computeZipfConstant(max_lambda, zipf_alpha)
-	total_num_vm = 0
-	total_num_serv = 0
+	total_num_vm = 0.0
+	total_num_serv = 0.0
 	results = []
 	total_profit = []
 	profits = []
+	configs = []
+	vms = []
+	containers = []
+	percent_load_containers = []
+	total_load = 0
 	for cp_ratio in cp_cost_ratios:
 		print cp_ratio
 		cp_alpha_s = cp_alpha_v * cp_ratio
 		total_profit = [] 
+		opt_config = []
+		opt_vms = []
+		opt_containers = []
+		total_percent_SC = []
 		for ratio in price_ratios:
 			alpha_s = alpha_v * ratio
 			results_num_vm = []
@@ -691,9 +1009,11 @@ def plotSingleUserDist(mode, dist):
 			results_total_servers = []
 			results_cost = []
 			profit = 0
+			total_num_vm = 0.0
+			total_num_serv = 0.0
+			config = -1
+			total_load = 0.0
 			for val_lambda in lambdas:
-				total_num_vm = 0
-				total_num_serv = 0
 				num_vm, load_serv, revenue = 0,0,0
 				if mode == 'OO':		
 					num_vm, load_serv, revenue = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
@@ -702,9 +1022,8 @@ def plotSingleUserDist(mode, dist):
 				# num_vm, num_serv, user_cost = get_config(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
 				cp_cost = getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)
 				# print i, num_vm, num_serv
-				results_num_vm.append(total_num_vm)
-				results_num_serv.append(total_num_serv)
-				results_total_servers.append(total_num_vm + total_num_serv)		
+				total_num_serv += load_serv
+				total_num_vm += num_vm
 				results_cost.append(revenue - cp_cost)
 				if dist == 'Uniform':
 					profit += ((1.0/max_lambda)*(revenue - cp_cost))
@@ -712,25 +1031,64 @@ def plotSingleUserDist(mode, dist):
 					profit += ((math.pow((1.0/val_lambda),zipf_alpha)*(revenue - cp_cost))/zipf_contant)
 			results.append(results_cost)
 			total_profit.append(profit)
+			if total_num_vm == 0:
+				config = 1
+			elif total_num_serv == 0:
+				config = 3
+			else:
+				config = 2
+			opt_config.append(config)
+			opt_vms.append(total_num_vm)
+			opt_containers.append(math.ceil(total_num_serv/mu_s))
+			total_percent_SC.append(100.0*float(total_num_serv)/float(sum(range(max_lambda+1))))
+			# total_percent_SC.append(total_num_serv)
 		profits.append(total_profit)
+		configs.append(opt_config)
+		vms.append(opt_vms)
+		containers.append(opt_containers)
+		percent_load_containers.append(total_percent_SC)
 	filename = '../graphs/mg1/' + dist + 'Dist' + mode + '.png'
 	fig = plt.figure()
 	legends = []
 	for ratio in cp_cost_ratios:
 		key = r'$\alpha_{s\_cp}$=' + str(ratio) + r'$\alpha_{v\_cp}$'
 		legends.append(key)
-	plt.plot(price_ratios[::10], profits[0][::10], 'c*', markersize=7)
-	plt.plot(price_ratios[::10], profits[1][::10], 'ro', markersize=7)
-	plt.plot(price_ratios[::10], profits[2][::10], 'g^', markersize=7)
+	plt.subplot(2,1,1)
+	plt.plot(price_ratios[::100], profits[0][::100], 'c*', markersize=7)
+	# plt.plot(price_ratios[::10], profits[1][::10], 'ro', markersize=7)
+	# plt.plot(price_ratios[::10], profits[2][::10], 'g^', markersize=7)
 	# plt.plot(price_ratios[::10], profits[3][::10], 'bs', markersize=7)
 	plt.plot(price_ratios, profits[0], 'c', linewidth='2')
-	plt.plot(price_ratios, profits[1], 'r', linewidth='2')
-	plt.plot(price_ratios, profits[2], 'g', linewidth='2')
+	# plt.plot(price_ratios, profits[1], 'r', linewidth='2')
+	# plt.plot(price_ratios, profits[2], 'g', linewidth='2')
 	# plt.plot(price_ratios, profits[3], 'b', linewidth='2')
 
 	plt.legend(legends, loc='lower right', fontsize=21)
-	plt.ylabel('Cloud Provider Profit', fontsize=25)
+	plt.ylabel('Cloud Provider Profit', fontsize=15)
+
+	# plt.subplot(3, 1, 2)
+	# plt.plot(price_ratios[::100], configs[0][::100], 'c*', markersize=7)
+
+	# plt.plot(price_ratios, configs[0], 'c', linewidth='2')
+	# plt.yticks([0,1,2,3,4], ('', 'SC', 'SC + VM', 'VM', ''))
+
+	# plt.subplot(2,1,2)
+	# plt.plot(price_ratios[::100], vms[0][::100], 'ro', markersize=7)
+	# # plt.plot(price_ratios[::100], containers[0][::100], 'g^', markersize=7)
+	# plt.plot(price_ratios, vms[0], 'r', linewidth='2')
+	# # plt.plot(price_ratios, containers[0], 'g', linewidth='2')	
+	# plt.ylabel('Number of resources', fontsize=15)
+	# plt.legend(['VM', 'SC'])
+	# # plt.yscale('log')
+	# plt.xlabel(r'$\alpha_s$', fontsize=25)
+
+	plt.subplot(2,1,2)
+	plt.plot(price_ratios[::100], percent_load_containers[0][::100], 'c*', markersize=7)
+	plt.plot(price_ratios, percent_load_containers[0], 'c', linewidth='2')
+	plt.ylabel('% SC load', fontsize=15)
+	plt.yscale('log')
 	plt.xlabel(r'$\alpha_s$', fontsize=25)
+
 	plt.savefig(filename)
 
 def plotSingleUser():
@@ -1135,6 +1493,12 @@ def main():
 		plotSingleUserOptimalSCvaryCPcost()
 	elif exp_type == 'plotSingleUserEfficiencyVarySCcost':
 		plotSingleUserEfficiencyVarySCcost()
+	elif exp_type == 'get_optimal_alpha_s':
+		get_optimal_alpha_s()
+	elif exp_type == 'get_optimal_alpha_s_vary_beta_v':
+		get_optimal_alpha_s_vary_beta_v()
+	elif exp_type == 'zipfdistribution':
+		zipfdistribution()
 	else:
 		print "Wrong <exp_type>"
 		print "<exp_type> : vary_num_VMs/vary_startup_delay/vary_service_rate_VM/plotVMcost/plotTotalcost"

@@ -384,7 +384,7 @@ def calculate_vm_dist_cost(arrival_lambda, delta, mu_spot, mu_v, mu_sl, N_SPOT, 
 	L_spot = beta * mu_spot
 
 	new_lambda_only_spots = arrival_lambda
-	num_spot_only_required = int(math.ceil(new_lambda_only_spots/L_spot))
+	num_spot_only_required = int(math.ceil(new_lambda_only_spots/(delta*L_spot)))
 	actual_spots = min(num_spot_only_required+1,N_SPOT+1)
 	num_vm_only_required = int(math.ceil(arrival_lambda/L_v))
 
@@ -433,8 +433,9 @@ def calculate_vm_dist_cost(arrival_lambda, delta, mu_spot, mu_v, mu_sl, N_SPOT, 
 			else:
 				vm_cost = 0
 			if s != 0:
-				spot_cost = inst_cost(spot_load_full, spot_load_full/(beta*mu_spot), alpha_spot, mu_spot, beta, gamma) + \
-								inst_cost(spot_load_part, 1.0, alpha_spot, mu_spot, beta, gamma)
+				# spot_cost = inst_cost(spot_load_full, spot_load_full/(beta*mu_spot), alpha_spot, mu_spot, beta, gamma) + \
+				# 				inst_cost(spot_load_part, 1.0, alpha_spot, mu_spot, beta, gamma)
+				spot_cost = alpha_spot * s * delta
 				# spot_cost = inst_cost(spot_load_full, s, alpha_spot, mu_spot, beta, gamma)
 			else:
 				spot_cost = 0
@@ -598,7 +599,7 @@ def OO_vary_failure_rate():
 	# 	count += 1
 		
 	for val_lambda in lambdas:
-		num_spot, num_vm, num_serverless, cost = calculate_vm_dist_cost(val_lambda, delta, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma)
+		num_spot, num_vm, num_serverless, cost, min_serv_cost, min_spot_cost, min_vm_cost = calculate_vm_dist_cost(val_lambda, delta, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma)
 		# if count == 1:
 		# 	print "Spot = %f\tOD = %f\tServ = %fval_lambda=%f\n\n" % (num_spot, num_vm, num_serverless,val_lambda)
 		# results_price.append(cost)
@@ -716,14 +717,14 @@ def plot_graph(filename, legends, xaxis, vm_cost, spot_cost, serv_cost, xlabel, 
 	# plt.plot(xaxis, vm_cost, 'yellowgreen', linewidth='2')
 	# plt.plot(xaxis, spot_cost, 'lightblue', linewidth='2')
 	# plt.plot(xaxis, serv_cost, 'black', linewidth='2')
-	yg = Rectangle((0, 0), 1, 1, fc="black", alpha=0.05)
+	yg = Rectangle((0, 0), 1, 1, fc="black", alpha=0.2)
 	lb = Rectangle((0, 0), 1, 1, fc="black", alpha=0.5)
 	b = Rectangle((0, 0), 1, 1, fc="black", alpha=1)
 	new_legends = [yg,lb,b]
 	plt.legend(new_legends, legends, loc=location, fontsize=21)
 	fig.suptitle(title)
 	# plt.autoscale(enable=False, axis='x')
-	plt.fill_between(xaxis, 0, vm_cost, color='black', alpha='0.05')
+	plt.fill_between(xaxis, 0, vm_cost, color='black', alpha='0.2')
 	plt.fill_between(xaxis, vm_cost, spot_cost, color='black', alpha='0.5')
 	plt.fill_between(xaxis, spot_cost, serv_cost, color='black', alpha='1')
 	plt.xlim(0,xaxis[-1])
@@ -816,6 +817,110 @@ def OO_price_ratio_spot_od():
 	title = ""
 	plot_graph(filename, legends, omega_savings_percent, vm_cost, spot_cost, serv_cost, xlabel, ylabel, title, location)
 	# plot_graph(filename, legends, ratio, vm_cost.reverse(), spot_cost.reverse(), serv_cost.reverse(), xlabel, ylabel, title, location)
+
+# OO, vary spot/VM price ratio
+def OO_delta_impact(val_lambda):
+
+	
+
+	# Number of spot VMs:
+	N_SPOT = 1000000
+	# Max capacity of VM allowed:
+	beta = 0.9 		
+	# startup delay
+	gamma = 1
+
+	# Cost
+	alpha_v = 1.0
+	alpha_sl = 2.5*alpha_v	
+	# omega_savings_percent = 0.75
+	# alpha_spot = (1-omega_savings_percent) * alpha_v
+
+	# Failure rate
+	# delta = (alpha_spot ** 2)/(alpha_v **2)		# Convex function
+	
+	# Service rates
+	mu_v = 8.0
+	mu_sl = 10.0
+	delta = 0.8
+
+	# Current Number of VMs:
+	n_spot = 0
+	n_v = 0
+	
+	# Transition points for VMs
+	
+	prev_transition_point = 0
+
+	# Previous transition cost:
+	prev_transition_cost = 0
+
+	results = []
+	message = ""
+	spots = []
+	vms = []
+	serv = []
+	spot_cost = []
+	serv_cost = []
+	vm_cost = []
+
+	# prev_transition_cost = n_spot * alpha_spot
+	count = 0
+	alpha_spot_values = [.01*x for x in range(10,int(alpha_v)*100)]
+	for alpha_spot in alpha_spot_values:
+		# delta = (alpha_spot ** 2)/(alpha_v **2)		# Convex function
+		delta = (-(alpha_spot**2) + (2*alpha_spot*alpha_v))/(alpha_v**2)		# Concave function
+		mu_spot = delta*mu_v
+
+		n_spot = 0
+		# print "failure rate = %f" % fail_rate
+		
+		# results_price = []
+		quants = []
+		count += 1
+		
+ 		num_spot, num_vm, num_serverless, cost, min_serv_cost, min_spot_cost, min_vm_cost = calculate_vm_dist_cost(val_lambda, delta, mu_spot, mu_v, mu_sl, N_SPOT, beta, alpha_v, alpha_sl, alpha_spot, gamma)
+		print "Spot = %f\tOD = %f\tServ = %fval_lambda=%f\n\n" % (num_spot, num_vm, num_serverless,val_lambda)
+		spots.append(num_spot)
+		vms.append(num_vm)
+		serv_cost.append(min_vm_cost + min_spot_cost + min_serv_cost)
+		spot_cost.append(min_vm_cost + min_spot_cost)
+		vm_cost.append(min_vm_cost)
+		if num_serverless > 0:
+			serv.append(1)
+		else:
+			serv.append(0)
+		# results_price.append(cost)
+		
+		# results.append(cost)
+		results.append(delta)
+	filename = '../graphs/mg1_spot/OO_delta_impact_lam_'  + str(val_lambda) + '.png'
+	legends = ['OD cost', 'Spot cost', 'SC cost']
+	ylabel = 'Cost'
+	location = "upper left"
+	xlabel = r'$\alpha_p$'
+	title = ""
+	plot_graph(filename, legends, alpha_spot_values, vm_cost, spot_cost, serv_cost, xlabel, ylabel, title, location)
+
+	# filename = "../graphs/delta.png"
+	# plt.figure()
+	# plt.plot(failure_rates[::5], results[::5], 'c*', markersize=7)
+	# plt.plot(failure_rates[::5], spots[::5], 'ro', markersize=7)
+	# plt.plot(failure_rates[::5], vms[::5], 'g^', markersize=7)
+	# plt.plot(failure_rates[::5], serv[::5], 'bs', markersize=7)
+	# plt.plot(alpha_spot_values, results, 'c', linewidth='2')
+	# plt.plot(failure_rates, spots, 'r', linewidth='2')
+	# plt.plot(failure_rates, vms, 'g', linewidth='2')
+	# plt.plot(failure_rates, serv, 'b', linewidth='2')
+
+	# plt.legend(legends, loc='upper right', fontsize=21)
+	# plt.ylabel('Number of VMs', fontsize=25)
+	# plt.autoscale(enable=False, axis='x')
+
+	# # fig.suptitle(title)
+	# plt.xlabel('Spot failure rate %', fontsize=25)
+	# plt.savefig(filename)
+
 
 # OO, vary spot/VM price ratio
 def OO_failure_rate_impact(val_lambda):
@@ -935,6 +1040,8 @@ def main():
 		OO_price_ratio_spot_od()
 	elif exp_type == 'OO_failure_rate_impact':
 		OO_failure_rate_impact(float(sys.argv[2]))
+	elif exp_type == 'OO_delta_impact':
+		OO_delta_impact(float(sys.argv[2]))
 	else:
 		print "Wrong <exp_type>"
 		print "<exp_type> : AO_vary_price_ratio_no_fail/AO_vary_failure_rate"
