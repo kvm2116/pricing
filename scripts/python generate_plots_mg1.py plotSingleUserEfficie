@@ -1,0 +1,6 @@
+python generate_plots_mg1.py plotSingleUserEfficiency AO
+python generate_plots_mg1.py get_optimal_alpha_s_vary_beta_v
+///////////////////////////python generate_plots_mg1.py  get_optimal_alpha_s_vary_mu///////////////////////////
+python generate_plots_mg1.py zipfdistributionVaryExp AO Zipf
+python generate_plots_mg1.py zipfdistributionVaryBetaV AO Zipf
+python generate_plots_mg1.py uniformdistributionVaryBetaV AO Uniform
