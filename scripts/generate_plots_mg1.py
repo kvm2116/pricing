@@ -283,25 +283,29 @@ def zipfdistributionVaryExp(mode, dist):
 	# cp_alpha_v = 1.5* cp_alpha_s
 	beta = 0.9
 	gamma = 1
-	zipf_alpha_values = [0.1*x for x in range(1, 30)]
+	zipf_alpha_values = [0.1*x for x in range(11, 30)]
 	
 	total_num_vm = 0.0
 	total_num_serv = 0.0
 	results = []
 	total_profit = []
-	profits = []
+	profit_diff = []
 	configs = []
 	vms = []
 	containers = []
 	percent_load_containers = []
 	total_load = 0
+	mean_alpha_s_results = []
 	
-
 	beta_v_values = [0.2, 0.4, 0.5] 
 	for cp_alpha_v in beta_v_values:
 		cp_alpha_s = mu_v*cp_alpha_v/mu_s
 		optimal_a_s = []
+		mean_alpha_s_res = []
+		profits = []
+		mean_profits = []
 		print cp_alpha_v
+
 		for zipf_alpha in zipf_alpha_values:
 			zipf_contant = computeZipfConstant(max_lambda, zipf_alpha)
 			# print cp_ratio
@@ -315,7 +319,9 @@ def zipfdistributionVaryExp(mode, dist):
 			total_percent_SC = []
 			max_profit = -1
 			opt_alpha_s = -1
-
+			mean_profit = -1
+			mean_alpha_s = -1
+			exp_lambda = computeZipfConstant(max_lambda, zipf_alpha-1)/computeZipfConstant(max_lambda, zipf_alpha)
 			for ratio in price_ratios:
 				alpha_s = alpha_v * ratio
 				results_num_vm = []
@@ -343,7 +349,7 @@ def zipfdistributionVaryExp(mode, dist):
 						profit += ((1.0/max_lambda)*(revenue - cp_cost))
 					elif dist == 'Zipf':
 						profit += ((math.pow((1.0/val_lambda),zipf_alpha)*(revenue - cp_cost))/zipf_contant)
-				results.append(results_cost)
+				# results.append(results_cost)
 				total_profit.append(profit)
 				if max_profit < profit:
 					max_profit = profit
@@ -358,18 +364,33 @@ def zipfdistributionVaryExp(mode, dist):
 				opt_vms.append(total_num_vm)
 				opt_containers.append(math.ceil(total_num_serv/mu_s))
 				total_percent_SC.append(100.0*float(total_num_serv)/float(sum(range(max_lambda+1))))
+
+				# compute optimal for mean lambda
+				num_vm, load_serv, revenue = get_configAO(beta, mu_s, mu_v, alpha_v, alpha_s, gamma, val_lambda)
+				cp_cost = getCPCost(num_vm, load_serv, cp_alpha_v, cp_alpha_s, mu_s, mu_v, val_lambda, beta)
+				if mean_profit < revenue - cp_cost:
+					mean_profit = revenue - cp_cost
+					mean_alpha_s = alpha_s
 				# total_percent_SC.append(total_num_serv)
 			profits.append(max_profit)
+			mean_alpha_s_res.append(mean_alpha_s)
+			mean_profits.append(mean_profit)
+
 			optimal_a_s.append(opt_alpha_s)
 			print optimal_a_s
 			configs.append(opt_config)
 			vms.append(opt_vms)
 			containers.append(opt_containers)
 			percent_load_containers.append(total_percent_SC)
-		results.append(optimal_a_s)
+		results.append(optimal_a_s) 
+		profit_diff.append([a_i - b_i for a_i, b_i in zip(profits, mean_profits)])
+		mean_alpha_s_results.append(mean_alpha_s_res)
+
 		# print results
 	# print results
 	print zipf_alpha_values
+	print results
+	print profit_diff
 	filename = '../graphs/mg1/' + dist + 'Dist' + mode + 'VaryExp.png'
 	fig = plt.figure()
 	legends = []
@@ -419,6 +440,25 @@ def zipfdistributionVaryExp(mode, dist):
 	# plt.xlabel(r'$\alpha_s$', fontsize=25)
 	plt.xlabel('zipf exponent (' + r'$\gamma$' + ')', fontsize=20)
 
+	plt.savefig(filename)
+
+	filename = '../graphs/mg1/' + dist + 'Dist' + mode + 'VaryExpMeanProfit.png'
+	fig = plt.figure()
+	# plt.subplot(2,1,1)
+	plt.plot(zipf_alpha_values[::2], profit_diff[0][::2], 'c*', markersize=7)
+	plt.plot(zipf_alpha_values[::2], profit_diff[1][::2], 'ro', markersize=7)
+	plt.plot(zipf_alpha_values[::2], profit_diff[2][::2], 'g^', markersize=7)
+	plt.plot(zipf_alpha_values, profit_diff[0], 'c', linewidth='2')
+	plt.plot(zipf_alpha_values, profit_diff[1], 'r', linewidth='2')
+	plt.plot(zipf_alpha_values, profit_diff[2], 'g', linewidth='2')
+	plt.ylabel('Profit difference', fontsize=15)
+	# plt.ylim(0, 25)
+	plt.legend(legends, loc='lower right', fontsize=21)
+
+	# plt.subplot(2,1,2)
+
+
+	plt.xlabel('zipf exponent (' + r'$\gamma$' + ')', fontsize=20)
 	plt.savefig(filename)
 
 
